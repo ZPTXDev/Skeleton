@@ -1,0 +1,26 @@
+'priority:p0':
+  - '(### Severity\n\nCritical)|(- \[x] Critical)'
+'priority:p1':
+  - '(### (Priority|Severity)\n\nHigh)|(- \[x] High)'
+'priority:p2':
+  - '(### (Priority|Severity)\n\nMedium)|(- \[x] Medium)'
+'priority:p3':
+  - '(### (Priority|Severity)\n\nLow)|(- \[x] Low)'
+'pr:type:feat':
+  - '(feat:|- \[x] Feature)'
+'pr:type:fix':
+  - '(fix:|- \[x] Bug fix)'
+'type:bug':
+  - '- \[x] Bug fix'
+'type:enhancement':
+  - '(- \[x] Feature|- \[x] Other)'
+'affects:documentation':
+  - '(- \[x] Documentation only|\bdoc[s]\b|\bdocumentation[s]\b)'
+'affects:functionality':
+  - '\bfunctionalit(?:y|ies)\b'
+'status:proposed':
+  - '.*'
+'branch:stable':
+  - '(\* \[x]  Stable)|(- \[x] Stable)'
+'branch:next':
+  - '(\* \[x]  Next)|(- \[x] Next)'

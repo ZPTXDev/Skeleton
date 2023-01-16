@@ -1,0 +1,8 @@
+# Ignore compiled JavaScript files
+dist/
+
+# Ignore node modules
+node_modules/
+
+# Ignore code coverage
+coverage/
