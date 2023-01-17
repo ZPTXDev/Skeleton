@@ -1,6 +1,11 @@
+import { createInterface } from 'readline/promises';
 import ZPTXClient from '../ZPTXClient.js';
 
-describe('ZPTXClient', (): void => {
+jest.mock('readline/promises');
+const mockedCreateInterface = <jest.Mock<typeof createInterface>>(
+    (createInterface as unknown)
+);
+describe('ZPTXClient class', (): void => {
     let client: ZPTXClient;
     beforeEach((): void => {
         client = new ZPTXClient({ intents: [] }, {});
@@ -69,6 +74,14 @@ describe('ZPTXClient', (): void => {
             },
         ];
         client['config'] = {};
+        mockedCreateInterface.mockReturnValue({
+            question: jest
+                .fn()
+                .mockResolvedValueOnce('1234')
+                .mockResolvedValueOnce('!'),
+            close: jest.fn(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
         const updatedConfig = await client.setupConfig(expectedConfig);
         expect(updatedConfig).toEqual({ token: '1234', prefix: '!' });
     });
