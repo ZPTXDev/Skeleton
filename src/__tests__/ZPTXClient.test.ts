@@ -55,7 +55,7 @@ describe('ZPTXClient class', (): void => {
 
     it('should return the correct config when validateConfig is called', (): void => {
         client['config'] = { token: '1234', prefix: '!' };
-        expect(client['validateConfig']).toBe(true);
+        expect(client['validateConfig']()).toBe(true);
     });
 
     it('should return the updated config when setupConfig is called', async (): Promise<void> => {
