@@ -13,7 +13,7 @@ import { createInterface } from 'readline/promises';
 
 type ExpectedConfigItem = {
     path: string;
-    type: string;
+    type: 'string' | 'number' | 'boolean';
     label: string;
     description: string;
 };
