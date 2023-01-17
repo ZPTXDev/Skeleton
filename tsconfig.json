@@ -15,5 +15,5 @@
 		"esModuleInterop": true,
 		"declaration": true
 	},
-	"include": ["src/**/*"]
+	"include": ["src/**/*", "node_modules/@zptxdev/zptx-lib/**/*"]
 }
