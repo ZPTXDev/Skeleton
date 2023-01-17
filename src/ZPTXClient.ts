@@ -82,13 +82,13 @@ export class ZPTXClient extends Client {
      * @returns - The updated config object
      */
     async setupConfig(): Promise<Record<string, unknown>> {
+        if (this.validateConfig()) {
+            return this.config;
+        }
         const rl = createInterface({
             input: process.stdin,
             output: process.stdout,
         });
-        if (this.validateConfig()) {
-            return this.config;
-        }
         const missingConfig = this.expectedConfig.filter(
             (config): boolean => !has(this.config, config.path),
         );
