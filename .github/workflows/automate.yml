@@ -1,9 +1,9 @@
 name: 'General Automation'
 on:
   push:
-    branches: master
+    branches: [ master, next ]
   pull_request_target:
-    branches: master
+    branches: next
 
 permissions:
   pull-requests: write
