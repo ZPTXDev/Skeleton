@@ -8,7 +8,7 @@ const config: Config.InitialOptions = {
 	moduleNameMapper: {
 		'(.+)\\.js': '$1',
 	},
-	extensionsToTreatAsEsm: ['.ts', '.js'],
+	extensionsToTreatAsEsm: ['.ts'],
 	transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@zptxdev/zptx-lib))'],
 };
 export default config;
