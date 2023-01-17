@@ -26,7 +26,7 @@ type AcceptedInteraction =
     | AnySelectMenuInteraction
     | ModalSubmitInteraction;
 
-export default class ZPTXClient extends Client {
+export class ZPTXClient extends Client {
     protected config: Record<string, unknown>;
     protected hookHandlers = {
         commands: new Collection<

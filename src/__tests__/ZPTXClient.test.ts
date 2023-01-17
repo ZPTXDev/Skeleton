@@ -1,5 +1,5 @@
 import { createInterface } from 'readline/promises';
-import ZPTXClient from '../ZPTXClient.js';
+import { ZPTXClient } from '../ZPTXClient.js';
 
 jest.mock('readline/promises');
 const mockedCreateInterface = <jest.Mock<typeof createInterface>>(
