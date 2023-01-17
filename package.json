@@ -39,10 +39,7 @@
       [
         "@semantic-release/git",
         {
-          "assets": [
-            "package.json",
-            "npm-shrinkwrap.json"
-          ],
+          "assets": ["package.json"],
           "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
         }
       ],
@@ -55,6 +52,7 @@
     "@types/node": "^18.11.18",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
+    "babel-jest": "^29.3.1",
     "eslint": "^8.32.0",
     "jest": "^29.3.1",
     "prettier": "^2.8.3",
