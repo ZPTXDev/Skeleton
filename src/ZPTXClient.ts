@@ -28,6 +28,7 @@ type AcceptedInteraction =
 
 export class ZPTXClient extends Client {
     protected config: Record<string, unknown>;
+    protected expectedConfig: ExpectedConfigItem[];
     protected hookHandlers = {
         commands: new Collection<
             string,
@@ -48,9 +49,14 @@ export class ZPTXClient extends Client {
         events: new Collection<string, EventHandler[]>(),
     };
 
-    constructor(options: ClientOptions, config: Record<string, unknown>) {
+    constructor(
+        options: ClientOptions,
+        config: Record<string, unknown>,
+        expectedConfig: ExpectedConfigItem[],
+    ) {
         super(options);
         this.config = config;
+        this.expectedConfig = expectedConfig;
     }
 
     /**
@@ -58,8 +64,8 @@ export class ZPTXClient extends Client {
      * @param expectedConfig - The expected config items to check for
      * @returns - Whether the config is valid or not
      */
-    private validateConfig(expectedConfig: ExpectedConfigItem[]): boolean {
-        return !expectedConfig.some(
+    private validateConfig(): boolean {
+        return !this.expectedConfig.some(
             (config): boolean => !has(this.config, config.path),
         );
     }
@@ -69,17 +75,15 @@ export class ZPTXClient extends Client {
      * @param expectedConfig - The expected config items to check for
      * @returns - The updated config object
      */
-    async setupConfig(
-        expectedConfig: ExpectedConfigItem[],
-    ): Promise<Record<string, unknown>> {
+    async setupConfig(): Promise<Record<string, unknown>> {
         const rl = createInterface({
             input: process.stdin,
             output: process.stdout,
         });
-        if (this.validateConfig(expectedConfig)) {
+        if (this.validateConfig()) {
             return this.config;
         }
-        const missingConfig = expectedConfig.filter(
+        const missingConfig = this.expectedConfig.filter(
             (config): boolean => !has(this.config, config.path),
         );
         for await (const config of missingConfig) {

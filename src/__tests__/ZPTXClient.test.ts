@@ -8,7 +8,21 @@ const mockedCreateInterface = <jest.Mock<typeof createInterface>>(
 describe('ZPTXClient class', (): void => {
     let client: ZPTXClient;
     beforeEach((): void => {
-        client = new ZPTXClient({ intents: [] }, {});
+        const expectedConfig = [
+            {
+                path: 'token',
+                type: 'string',
+                label: 'Token',
+                description: 'The bot token',
+            },
+            {
+                path: 'prefix',
+                type: 'string',
+                label: 'Prefix',
+                description: 'The bot prefix',
+            },
+        ];
+        client = new ZPTXClient({ intents: [] }, {}, expectedConfig);
     });
 
     it('should have a hookHandlers property', (): void => {
@@ -40,39 +54,11 @@ describe('ZPTXClient class', (): void => {
     });
 
     it('should return the correct config when validateConfig is called', (): void => {
-        const expectedConfig = [
-            {
-                path: 'token',
-                type: 'string',
-                label: 'Token',
-                description: 'The bot token',
-            },
-            {
-                path: 'prefix',
-                type: 'string',
-                label: 'Prefix',
-                description: 'The bot prefix',
-            },
-        ];
         client['config'] = { token: '1234', prefix: '!' };
-        expect(client['validateConfig'](expectedConfig)).toBe(true);
+        expect(client['validateConfig']).toBe(true);
     });
 
     it('should return the updated config when setupConfig is called', async (): Promise<void> => {
-        const expectedConfig = [
-            {
-                path: 'token',
-                type: 'string',
-                label: 'Token',
-                description: 'The bot token',
-            },
-            {
-                path: 'prefix',
-                type: 'string',
-                label: 'Prefix',
-                description: 'The bot prefix',
-            },
-        ];
         client['config'] = {};
         mockedCreateInterface.mockReturnValue({
             question: jest
@@ -82,7 +68,7 @@ describe('ZPTXClient class', (): void => {
             close: jest.fn(),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
-        const updatedConfig = await client.setupConfig(expectedConfig);
+        const updatedConfig = await client.setupConfig();
         expect(updatedConfig).toEqual({ token: '1234', prefix: '!' });
     });
 });
