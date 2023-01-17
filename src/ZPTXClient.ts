@@ -171,7 +171,9 @@ export default class ZPTXClient extends Client {
                 }
             }
         }
-        this.on('interactionCreate', async (interaction): Promise<void> => {
+        const hookInteractionHandler = async (
+            interaction: AcceptedInteraction,
+        ): Promise<void> => {
             let execute: (
                 interaction: AcceptedInteraction,
             ) => Promise<void> | undefined;
@@ -198,7 +200,16 @@ export default class ZPTXClient extends Client {
             if (execute) {
                 await execute(interaction as AcceptedInteraction);
             }
-        });
+        };
+        if (this.hookHandlers.events.has('interactionCreate')) {
+            this.hookHandlers.events
+                .get('interactionCreate')
+                .push(hookInteractionHandler);
+        } else {
+            this.hookHandlers.events.set('interactionCreate', [
+                hookInteractionHandler,
+            ]);
+        }
         this.hookHandlers.events.forEach((eventHandler, key): void => {
             this.addListener(key, async (...args): Promise<void> => {
                 for await (const handler of eventHandler) {
