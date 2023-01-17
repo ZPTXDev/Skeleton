@@ -1,5 +1,5 @@
 import { createInterface } from 'readline/promises';
-import { ZPTXClient } from '../ZPTXClient.js';
+import { ExpectedConfigItemTypes, ZPTXClient } from '../ZPTXClient.js';
 
 jest.mock('readline/promises');
 const mockedCreateInterface = <jest.Mock<typeof createInterface>>(
@@ -11,13 +11,13 @@ describe('ZPTXClient class', (): void => {
         const expectedConfig = [
             {
                 path: 'token',
-                type: 'string',
+                type: ExpectedConfigItemTypes.String,
                 label: 'Token',
                 description: 'The bot token',
             },
             {
                 path: 'prefix',
-                type: 'string',
+                type: ExpectedConfigItemTypes.String,
                 label: 'Prefix',
                 description: 'The bot prefix',
             },

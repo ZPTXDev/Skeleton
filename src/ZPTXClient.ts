@@ -11,9 +11,15 @@ import { readdirSync } from 'fs';
 import { has, set } from 'lodash-es';
 import { createInterface } from 'readline/promises';
 
+export enum ExpectedConfigItemTypes {
+    String = 'string',
+    Number = 'number',
+    Boolean = 'boolean',
+}
+
 type ExpectedConfigItem = {
     path: string;
-    type: 'string' | 'number' | 'boolean';
+    type: ExpectedConfigItemTypes;
     label: string;
     description: string;
 };
