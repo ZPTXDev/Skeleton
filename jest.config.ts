@@ -10,6 +10,6 @@ const config: Config.InitialOptions = {
 		'(.+)\\.js': '$1',
 	},
 	extensionsToTreatAsEsm: ['.ts'],
-	transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@zptxdev/zptx-lib))'],
+	transformIgnorePatterns: ['node_modules/(?!(@zptxdev/zptx-lib))'],
 };
 export default config;
