@@ -10,5 +10,6 @@ const config: Config.InitialOptions = {
 	},
 	extensionsToTreatAsEsm: ['.ts'],
 	transformIgnorePatterns: ['<rootDir>/node_modules/(?!(@zptxdev/zptx-lib))'],
+	moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
 export default config;
