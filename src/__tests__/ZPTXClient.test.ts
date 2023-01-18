@@ -58,6 +58,17 @@ describe('ZPTXClient class', (): void => {
         expect(client['validateConfig']()).toBe(true);
     });
 
+    it('should return the same config when setupConfig is called with no missing properties', async (): Promise<void> => {
+        client['config'] = { token: '1234', prefix: '!' };
+        mockedCreateInterface.mockReturnValue({
+            question: jest.fn(),
+            close: jest.fn(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+        const updatedConfig = await client.setupConfig();
+        expect(updatedConfig).toEqual({ token: '1234', prefix: '!' });
+    });
+
     it('should return the updated config when setupConfig is called', async (): Promise<void> => {
         client['config'] = {};
         mockedCreateInterface.mockReturnValue({
