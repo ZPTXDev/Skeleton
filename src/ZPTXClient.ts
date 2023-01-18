@@ -97,18 +97,20 @@ export class ZPTXClient extends Client {
                 `${config.label} - ${
                     config.description
                 }\nEnter a value of type ${config.type}${
-                    config.type === 'boolean' ? ' (true/false)' : ''
+                    config.type === ExpectedConfigItemTypes.Boolean
+                        ? ' (true/false)'
+                        : ''
                 }: `,
             );
             switch (config.type) {
-                case 'number':
+                case ExpectedConfigItemTypes.Number:
                     this.config = set(
                         this.config,
                         config.path,
                         isNaN(Number(answer)) ? 0 : Number(answer),
                     );
                     break;
-                case 'boolean':
+                case ExpectedConfigItemTypes.Boolean:
                     this.config = set(
                         this.config,
                         config.path,
