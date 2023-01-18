@@ -126,7 +126,7 @@ export class ZPTXClient extends Client {
 
     /**
      * Initialize the client, sets up the event handlers
-     * @param baseURL - The base URL (usually import.meta.url) of the main file
+     * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
         const modules = readdirSync(getAbsoluteFileURL(baseURL, ['modules']));
