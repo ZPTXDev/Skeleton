@@ -1,6 +1,6 @@
 {
   "name": "@zptxdev/skeleton",
-  "version": "1.0.4-next.4",
+  "version": "1.0.4",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
