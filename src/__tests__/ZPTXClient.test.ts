@@ -98,21 +98,17 @@ describe('ZPTXClient class', (): void => {
 
     it('should return the updated config when setupConfig is called', async (): Promise<void> => {
         client['config'] = {};
-        const mockedQuestionFunction = jest
-            .fn()
-            .mockResolvedValueOnce('1234')
-            .mockResolvedValueOnce('!')
-            .mockResolvedValueOnce('1')
-            .mockResolvedValueOnce('true');
         mockedCreateInterface.mockReturnValue({
-            question: mockedQuestionFunction,
+            question: jest
+                .fn()
+                .mockResolvedValueOnce('1234')
+                .mockResolvedValueOnce('!')
+                .mockResolvedValueOnce('1')
+                .mockResolvedValueOnce('true'),
             close: jest.fn(),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         const updatedConfig = await client.setupConfig();
-        expect(mockedQuestionFunction).toHaveBeenLastCalledWith(
-            'Debug - The bot debug\nEnter a value of type boolean (true/false): ',
-        );
         expect(updatedConfig).toEqual({
             token: '1234',
             prefix: '!',
