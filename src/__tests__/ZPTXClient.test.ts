@@ -1,5 +1,9 @@
 import { createInterface } from 'readline/promises';
-import { ExpectedConfigItemTypes, ZPTXClient } from '../ZPTXClient.js';
+import {
+    ExpectedConfigItem,
+    ExpectedConfigItemTypes,
+} from '../ExpectedConfigItem.js';
+import { ZPTXClient } from '../ZPTXClient.js';
 
 jest.mock('readline/promises');
 const mockedCreateInterface = <jest.Mock<typeof createInterface>>(
@@ -9,30 +13,30 @@ describe('ZPTXClient class', (): void => {
     let client: ZPTXClient;
     beforeEach((): void => {
         const expectedConfig = [
-            {
-                path: 'token',
-                type: ExpectedConfigItemTypes.String,
-                label: 'Token',
-                description: 'The bot token',
-            },
-            {
-                path: 'prefix',
-                type: ExpectedConfigItemTypes.String,
-                label: 'Prefix',
-                description: 'The bot prefix',
-            },
-            {
-                path: 'cooldown',
-                type: ExpectedConfigItemTypes.Number,
-                label: 'Cooldown',
-                description: 'The bot cooldown',
-            },
-            {
-                path: 'debug',
-                type: ExpectedConfigItemTypes.Boolean,
-                label: 'Debug',
-                description: 'The bot debug',
-            },
+            new ExpectedConfigItem(
+                'token',
+                ExpectedConfigItemTypes.String,
+                'Token',
+                'The bot token',
+            ),
+            new ExpectedConfigItem(
+                'prefix',
+                ExpectedConfigItemTypes.String,
+                'Prefix',
+                'The bot prefix',
+            ),
+            new ExpectedConfigItem(
+                'cooldown',
+                ExpectedConfigItemTypes.Number,
+                'Cooldown',
+                'The bot cooldown',
+            ),
+            new ExpectedConfigItem(
+                'debug',
+                ExpectedConfigItemTypes.Boolean,
+                'Debug',
+                'Debug mode',
+            ),
         ];
         client = new ZPTXClient({ intents: [] }, {}, expectedConfig);
     });

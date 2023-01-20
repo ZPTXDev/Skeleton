@@ -10,19 +10,8 @@ import { Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import { has, set } from 'lodash-es';
 import { createInterface } from 'readline/promises';
-
-export enum ExpectedConfigItemTypes {
-    String = 'string',
-    Number = 'number',
-    Boolean = 'boolean',
-}
-
-type ExpectedConfigItem = {
-    path: string;
-    type: ExpectedConfigItemTypes;
-    label: string;
-    description: string;
-};
+import type { ExpectedConfigItem } from './ExpectedConfigItem.js';
+import { ExpectedConfigItemTypes } from './ExpectedConfigItem.js';
 
 type EventHandler = (...args: unknown[]) => Promise<void>;
 
@@ -93,15 +82,8 @@ export class ZPTXClient extends Client {
             (config): boolean => !has(this.config, config.path),
         );
         for await (const config of missingConfig) {
-            const answer = await rl.question(
-                `${config.label} - ${
-                    config.description
-                }\nEnter a value of type ${config.type}${
-                    config.type === ExpectedConfigItemTypes.Boolean
-                        ? ' (true/false)'
-                        : ''
-                }: `,
-            );
+            console.log(config.title);
+            const answer = await rl.question(config.question);
             switch (config.type) {
                 case ExpectedConfigItemTypes.Number:
                     this.config = set(
@@ -183,6 +165,7 @@ export class ZPTXClient extends Client {
                 }
             }
         }
+        // define our hook interaction handler (which is an event handler itself)
         const hookInteractionHandler = async (
             interaction: AcceptedInteraction,
         ): Promise<void> => {
@@ -213,6 +196,7 @@ export class ZPTXClient extends Client {
                 await execute(interaction as AcceptedInteraction);
             }
         };
+        // hook our hook interaction handler into the existing event handler for interactionCreate
         if (this.hookHandlers.events.has('interactionCreate')) {
             this.hookHandlers.events
                 .get('interactionCreate')
@@ -222,6 +206,7 @@ export class ZPTXClient extends Client {
                 hookInteractionHandler,
             ]);
         }
+        // add all the event handlers
         this.hookHandlers.events.forEach((eventHandler, key): void => {
             this.addListener(key, async (...args): Promise<void> => {
                 for await (const handler of eventHandler) {
