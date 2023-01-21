@@ -10,6 +10,7 @@ import { Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import { has, set } from 'lodash-es';
 import { createInterface } from 'readline/promises';
+import type { Logger } from 'winston';
 import type { ExpectedConfigItem } from './ExpectedConfigItem.js';
 import { ExpectedConfigItemTypes } from './ExpectedConfigItem.js';
 
@@ -43,15 +44,53 @@ export class ZPTXClient extends Client {
         >(),
         events: new Collection<string, EventHandler[]>(),
     };
+    private verbose = process.argv
+        .slice(2)
+        .map((argv): string => argv.toLowerCase())
+        .includes('--verbose');
+    private logger: {
+        error: (message: string) => Logger | void;
+        warn: (message: string) => Logger | void;
+        info: (message: string) => Logger | void;
+        verbose: (message: string) => Logger | void;
+    };
 
     constructor(
-        options: ClientOptions,
+        options: ClientOptions & { logger?: Logger },
         config: Record<string, unknown>,
         expectedConfig: ExpectedConfigItem[],
     ) {
         super(options);
         this.config = config;
         this.expectedConfig = expectedConfig;
+        const label = 'Skeleton';
+        if (options.logger) {
+            this.logger = {
+                error: (message): Logger =>
+                    options.logger.error({ message, label }),
+                warn: (message): Logger =>
+                    options.logger.warn({ message, label }),
+                info: (message): Logger =>
+                    options.logger.info({ message, label }),
+                verbose: (message): Logger =>
+                    this.verbose
+                        ? options.logger.verbose({ message, label })
+                        : options.logger,
+            };
+        } else {
+            this.logger = {
+                error: (message): void =>
+                    console.error(`[${label}] [ERROR] ${message}`),
+                warn: (message): void =>
+                    console.warn(`[${label}] [WARN] ${message}`),
+                info: (message): void =>
+                    console.info(`[${label}] [INFO] ${message}`),
+                verbose: (message): void =>
+                    this.verbose
+                        ? console.log(`[${label}] [VERBOSE] ${message}`)
+                        : null,
+            };
+        }
     }
 
     /**
@@ -81,6 +120,9 @@ export class ZPTXClient extends Client {
         const missingConfig = this.expectedConfig.filter(
             (config): boolean => !has(this.config, config.path),
         );
+        this.logger.verbose(
+            `Setting up config - ${missingConfig.length} items missing`,
+        );
         for await (const config of missingConfig) {
             console.log(config.title);
             const answer = await rl.question(config.question);
@@ -105,6 +147,7 @@ export class ZPTXClient extends Client {
             }
         }
         rl.close();
+        this.logger.verbose('Config setup complete');
         return this.config;
     }
 
@@ -113,8 +156,15 @@ export class ZPTXClient extends Client {
      * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
+        this.logger.verbose('Initializing client');
         const modules = readdirSync(getAbsoluteFileURL(baseURL, ['modules']));
+        this.logger.verbose('Loading modules');
         for await (const module of modules) {
+            this.logger.verbose(
+                `Loading module ${module} (${modules.indexOf(module) + 1} of ${
+                    modules.length
+                })`,
+            );
             const hooks = readdirSync(
                 getAbsoluteFileURL(baseURL, ['modules', module]),
             ).filter((hook): boolean =>
@@ -127,6 +177,11 @@ export class ZPTXClient extends Client {
                 ].includes(hook),
             );
             for await (const hook of hooks) {
+                this.logger.verbose(
+                    `Loading hook ${hook} (${hooks.indexOf(hook) + 1} of ${
+                        hooks.length
+                    })`,
+                );
                 const handlers = readdirSync(
                     getAbsoluteFileURL(baseURL, ['modules', module, hook]),
                 ).filter(
@@ -134,6 +189,11 @@ export class ZPTXClient extends Client {
                         handler.endsWith('.ts') || handler.endsWith('.js'),
                 );
                 for await (const handler of handlers) {
+                    this.logger.verbose(
+                        `Loading handler ${handler} (${
+                            handlers.indexOf(handler) + 1
+                        } of ${handlers.length})`,
+                    );
                     const { default: handlerData } = await import(
                         getAbsoluteFileURL(baseURL, [
                             'modules',
@@ -162,10 +222,15 @@ export class ZPTXClient extends Client {
                         pureHandler,
                         handlerData.execute,
                     );
+                    this.logger.verbose(`Loaded handler ${handler}`);
                 }
+                this.logger.verbose(`Loaded hook ${hook}`);
             }
+            this.logger.verbose(`Loaded module ${module}`);
         }
+        this.logger.verbose('Loaded modules');
         // define our hook interaction handler (which is an event handler itself)
+        this.logger.verbose('Setting up hook interaction handler');
         const hookInteractionHandler = async (
             interaction: AcceptedInteraction,
         ): Promise<void> => {
@@ -196,7 +261,9 @@ export class ZPTXClient extends Client {
                 await execute(interaction as AcceptedInteraction);
             }
         };
+        this.logger.verbose('Hook interaction handler set up');
         // hook our hook interaction handler into the existing event handler for interactionCreate
+        this.logger.verbose('Hooking hook interaction handler');
         if (this.hookHandlers.events.has('interactionCreate')) {
             this.hookHandlers.events
                 .get('interactionCreate')
@@ -206,7 +273,9 @@ export class ZPTXClient extends Client {
                 hookInteractionHandler,
             ]);
         }
+        this.logger.verbose('Hooked hook interaction handler');
         // add all the event handlers
+        this.logger.verbose('Setting up event handlers');
         this.hookHandlers.events.forEach((eventHandler, key): void => {
             this.addListener(key, async (...args): Promise<void> => {
                 for await (const handler of eventHandler) {
@@ -214,5 +283,7 @@ export class ZPTXClient extends Client {
                 }
             });
         });
+        this.logger.verbose('Event handlers set up');
+        this.logger.verbose('Initialized client');
     }
 }
