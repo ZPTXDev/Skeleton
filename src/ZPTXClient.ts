@@ -258,7 +258,7 @@ export class ZPTXClient extends Client {
                 );
             }
             if (execute) {
-                await execute(interaction as AcceptedInteraction);
+                await execute(interaction);
             }
         };
         this.logger.verbose('Hook interaction handler set up');
