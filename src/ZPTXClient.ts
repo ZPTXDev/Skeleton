@@ -55,6 +55,29 @@ export class ZPTXClient extends Client {
         verbose: (message: string) => Logger | void;
     };
 
+    /**
+     * Create a ZPTXClient instance
+     * @example
+     * const client = new ZPTXClient({
+     *     {
+     *         intents: [
+     *             GatewayIntentBits.Guilds,
+     *         ],
+     *     },
+     *     config.JSON(),
+     *     [
+     *         new ExpectedConfigItem(
+     *             'token',
+     *             ExpectedConfigItemTypes.String,
+     *             'Token',
+     *             'The bot token',
+     *         ),
+     *     ],
+     * });
+     * @param options - discord.js ClientOptions, and winston logger if available
+     * @param config - Current config object
+     * @param expectedConfig - Array of ExpectedConfigItem
+     */
     constructor(
         options: ClientOptions & { logger?: Logger },
         config: Record<string, unknown>,
@@ -106,6 +129,8 @@ export class ZPTXClient extends Client {
 
     /**
      * Setup the config if it is missing any values
+     * @example
+     * const updatedConfig = await client.setupConfig();
      * @param expectedConfig - The expected config items to check for
      * @returns - The updated config object
      */
@@ -153,10 +178,13 @@ export class ZPTXClient extends Client {
 
     /**
      * Initialize the client, sets up the event handlers
+     * @example
+     * await client.initialize(import.meta.url);
+     * client.login(config.get('token'));
      * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
-        this.logger.verbose('Initializing client');
+        this.logger.info('Initializing client');
         const modules = readdirSync(getAbsoluteFileURL(baseURL, ['modules']));
         this.logger.verbose('Loading modules');
         for await (const module of modules) {
@@ -237,29 +265,69 @@ export class ZPTXClient extends Client {
             let execute: (
                 interaction: AcceptedInteraction,
             ) => Promise<void> | undefined;
+            const source = `from UID ${interaction.user.id}${
+                interaction.inGuild() ? ` in GID ${interaction.guildId}` : ''
+            }`;
+            let details = '';
+            if (interaction.isCommand()) {
+                details = `command /${interaction.commandName}${
+                    interaction.options.data.length > 0
+                        ? ` ${interaction.options.data
+                              .map(
+                                  (option): string =>
+                                      `${option.name}:${option.value}`,
+                              )
+                              .join(' ')}`
+                        : ''
+                }`;
+            } else {
+                details = `${interaction.constructor.name} ${interaction.customId}`;
+            }
+            this.logger.info(`Processing ${details} ${source}`);
             if (interaction.isCommand()) {
                 execute = this.hookHandlers.commands.get(
                     interaction.commandName,
+                );
+                this.logger.verbose(
+                    `Matched command handler /${interaction.commandName}`,
                 );
             }
             if (interaction.isButton()) {
                 execute = this.hookHandlers.buttons.get(
                     interaction.customId.split(':')[0],
                 );
+                this.logger.verbose(
+                    `Matched button interaction handler ${
+                        interaction.customId.split(':')[0]
+                    }`,
+                );
             }
             if (interaction.isAnySelectMenu()) {
                 execute = this.hookHandlers.selectMenus.get(
                     interaction.customId.split(':')[0],
+                );
+                this.logger.verbose(
+                    `Matched select menu interaction handler ${
+                        interaction.customId.split(':')[0]
+                    }`,
                 );
             }
             if (interaction.isModalSubmit()) {
                 execute = this.hookHandlers.modals.get(
                     interaction.customId.split(':')[0],
                 );
+                this.logger.verbose(
+                    `Matched modal submit interaction handler ${
+                        interaction.customId.split(':')[0]
+                    }`,
+                );
             }
             if (execute) {
+                this.logger.info(`Responding to ${details} ${source}`);
                 await execute(interaction);
+                return;
             }
+            this.logger.warn(`Ignoring ${details} ${source}`);
         };
         this.logger.verbose('Hook interaction handler set up');
         // hook our hook interaction handler into the existing event handler for interactionCreate
@@ -284,6 +352,6 @@ export class ZPTXClient extends Client {
             });
         });
         this.logger.verbose('Event handlers set up');
-        this.logger.verbose('Initialized client');
+        this.logger.info('Initialized client');
     }
 }
