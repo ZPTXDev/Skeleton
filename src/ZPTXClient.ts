@@ -14,8 +14,14 @@ import type { Logger } from 'winston';
 import type { ExpectedConfigItem } from './ExpectedConfigItem.js';
 import { ExpectedConfigItemTypes } from './ExpectedConfigItem.js';
 
+/**
+ * The event handler function
+ */
 type EventHandler = (...args: unknown[]) => Promise<void>;
 
+/**
+ * The accepted interaction types
+ */
 type AcceptedInteraction =
     | CommandInteraction
     | ButtonInteraction
