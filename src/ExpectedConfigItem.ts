@@ -1,6 +1,15 @@
 export enum ExpectedConfigItemTypes {
+    /**
+     * A string
+     */
     String = 'string',
+    /**
+     * A number (e.g. 1, 0.5, 0.25)
+     */
     Number = 'number',
+    /**
+     * A boolean (true or false)
+     */
     Boolean = 'boolean',
 }
 
