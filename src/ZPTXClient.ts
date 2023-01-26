@@ -56,7 +56,7 @@ export class ZPTXClient extends Client {
     };
 
     /**
-     * Create a ZPTXClient instance
+     * Creates an instance of ZPTXClient.
      * @example
      * const client = new ZPTXClient({
      *     {
