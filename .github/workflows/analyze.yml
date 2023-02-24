@@ -59,6 +59,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: npm i -g npm@8
       - uses: EPMatt/reviewdog-action-tsc@v1.4.0
         with:
             reporter: github-check
