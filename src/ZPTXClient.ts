@@ -8,11 +8,16 @@ import type {
 } from 'discord.js';
 import { Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
-import { has, set } from 'lodash-es';
-import { createInterface } from 'readline/promises';
+import terminalKitPackage from 'terminal-kit';
 import type { Logger } from 'winston';
-import type { ExpectedConfigItem } from './ExpectedConfigItem.js';
-import { ExpectedConfigItemTypes } from './ExpectedConfigItem.js';
+import type { Config } from './Config.js';
+const { terminal } = terminalKitPackage;
+
+terminal.on('key', (name: string): void => {
+    if (name === 'CTRL_C') {
+        process.exit();
+    }
+});
 
 /**
  * The event handler function
@@ -29,8 +34,7 @@ type AcceptedInteraction =
     | ModalSubmitInteraction;
 
 export class ZPTXClient extends Client {
-    protected config: Record<string, unknown>;
-    protected expectedConfig: ExpectedConfigItem[];
+    config: Config;
     protected hookHandlers = {
         commands: new Collection<
             string,
@@ -70,28 +74,23 @@ export class ZPTXClient extends Client {
      *             GatewayIntentBits.Guilds,
      *         ],
      *     },
-     *     config.JSON(),
-     *     [
-     *         new ExpectedConfigItem(
+     *     new Config([
+     *         new StringConfigItem(
      *             'token',
-     *             ExpectedConfigItemTypes.String,
      *             'Token',
      *             'The bot token',
+     *             { required: true },
      *         ),
-     *     ],
+     *     ]),
      * });
+     * // To pass existing config before setting up, use:
+     * client.config.parseJSON(config.JSON());
      * @param options - discord.js ClientOptions, and winston logger if available
-     * @param config - Current config object
-     * @param expectedConfig - Array of ExpectedConfigItem
+     * @param config - Config instance
      */
-    constructor(
-        options: ClientOptions & { logger?: Logger },
-        config: Record<string, unknown>,
-        expectedConfig: ExpectedConfigItem[],
-    ) {
+    constructor(options: ClientOptions & { logger?: Logger }, config: Config) {
         super(options);
         this.config = config;
-        this.expectedConfig = expectedConfig;
         const label = 'Skeleton';
         if (options.logger) {
             this.logger = {
@@ -123,70 +122,10 @@ export class ZPTXClient extends Client {
     }
 
     /**
-     * Check if the config has all the required values
-     * @param expectedConfig - The expected config items to check for
-     * @returns - Whether the config is valid or not
-     */
-    private validateConfig(): boolean {
-        return !this.expectedConfig.some(
-            (config): boolean => !has(this.config, config.path),
-        );
-    }
-
-    /**
-     * Setup the config if it is missing any values
-     * @example
-     * const updatedConfig = await client.setupConfig();
-     * @param expectedConfig - The expected config items to check for
-     * @returns - The updated config object
-     */
-    async setupConfig(): Promise<Record<string, unknown>> {
-        if (this.validateConfig()) {
-            return this.config;
-        }
-        const rl = createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        const missingConfig = this.expectedConfig.filter(
-            (config): boolean => !has(this.config, config.path),
-        );
-        this.logger.verbose(
-            `Setting up config - ${missingConfig.length} items missing`,
-        );
-        for await (const config of missingConfig) {
-            console.log(config.title);
-            const answer = await rl.question(config.question);
-            switch (config.type) {
-                case ExpectedConfigItemTypes.Number:
-                    this.config = set(
-                        this.config,
-                        config.path,
-                        isNaN(Number(answer)) ? 0 : Number(answer),
-                    );
-                    break;
-                case ExpectedConfigItemTypes.Boolean:
-                    this.config = set(
-                        this.config,
-                        config.path,
-                        answer.toLowerCase() === 'true',
-                    );
-                    break;
-                default:
-                    this.config = set(this.config, config.path, answer);
-                    break;
-            }
-        }
-        rl.close();
-        this.logger.verbose('Config setup complete');
-        return this.config;
-    }
-
-    /**
      * Initialize the client, sets up the event handlers
      * @example
      * await client.initialize(import.meta.url);
-     * client.login(config.get('token'));
+     * client.login(client.config.get('token'));
      * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
