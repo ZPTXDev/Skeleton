@@ -11,6 +11,7 @@ import { readdirSync } from 'fs';
 import terminalKitPackage from 'terminal-kit';
 import type { Logger } from 'winston';
 import type { Config } from './Config.js';
+import { logger } from './Logger.js';
 const { terminal } = terminalKitPackage;
 
 terminal.on('key', (name: string): void => {
@@ -59,10 +60,10 @@ export class ZPTXClient extends Client {
         .map((argv): string => argv.toLowerCase())
         .includes('--verbose');
     private logger: {
-        error: (message: string) => Logger | void;
-        warn: (message: string) => Logger | void;
-        info: (message: string) => Logger | void;
-        verbose: (message: string) => Logger | void;
+        error: (message: string) => Logger;
+        warn: (message: string) => Logger;
+        info: (message: string) => Logger;
+        verbose: (message: string) => Logger;
     };
 
     /**
@@ -85,40 +86,20 @@ export class ZPTXClient extends Client {
      * });
      * // To pass existing config before setting up, use:
      * client.config.parseJSON(config.JSON());
-     * @param options - discord.js ClientOptions, and winston logger if available
+     * @param options - discord.js ClientOptions
      * @param config - Config instance
      */
-    constructor(options: ClientOptions & { logger?: Logger }, config: Config) {
+    constructor(options: ClientOptions, config: Config) {
         super(options);
         this.config = config;
         const label = 'Skeleton';
-        if (options.logger) {
-            this.logger = {
-                error: (message): Logger =>
-                    options.logger.error({ message, label }),
-                warn: (message): Logger =>
-                    options.logger.warn({ message, label }),
-                info: (message): Logger =>
-                    options.logger.info({ message, label }),
-                verbose: (message): Logger =>
-                    this.verbose
-                        ? options.logger.verbose({ message, label })
-                        : options.logger,
-            };
-        } else {
-            this.logger = {
-                error: (message): void =>
-                    console.error(`[${label}] [ERROR] ${message}`),
-                warn: (message): void =>
-                    console.warn(`[${label}] [WARN] ${message}`),
-                info: (message): void =>
-                    console.info(`[${label}] [INFO] ${message}`),
-                verbose: (message): void =>
-                    this.verbose
-                        ? console.log(`[${label}] [VERBOSE] ${message}`)
-                        : null,
-            };
-        }
+        this.logger = {
+            error: (message): Logger => logger.error({ message, label }),
+            warn: (message): Logger => logger.warn({ message, label }),
+            info: (message): Logger => logger.info({ message, label }),
+            verbose: (message): Logger =>
+                this.verbose ? logger.verbose({ message, label }) : logger,
+        };
     }
 
     /**
