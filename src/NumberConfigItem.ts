@@ -45,45 +45,34 @@ export class NumberConfigItem extends ConfigItem {
     async setup(override?: boolean): Promise<number> {
         if (!override && this.value !== undefined) return this.value;
         this.printSetupHeader();
-        terminal(
-            `\nEnter a number${
-                this.min && !this.max
-                    ? ` from ${this.min}`
-                    : !this.min && this.max
-                    ? ` less than or equal to ${this.max}`
-                    : this.min && this.max
-                    ? ` between ${this.min} and ${this.max}`
-                    : ''
-            }: `,
-        );
-        this.value = Number(
-            await terminal.inputField({
-                default: this.defaultValue?.toString() ?? '',
-            }).promise,
-        );
+        const question = `\nEnter a number${
+            this.min && !this.max
+                ? ` from ${this.min}`
+                : !this.min && this.max
+                ? ` less than or equal to ${this.max}`
+                : this.min && this.max
+                ? ` between ${this.min} and ${this.max}`
+                : ''
+        }: `;
         while (
             isNaN(this.value) ||
             this.value < this.min ||
             this.value > this.max
         ) {
-            terminal.red('\nInvalid number! Please try again.');
-            terminal(
-                `\nEnter a number${
-                    this.min && !this.max
-                        ? ` from ${this.min}`
-                        : !this.min && this.max
-                        ? ` less than or equal to ${this.max}`
-                        : this.min && this.max
-                        ? ` between ${this.min} and ${this.max}`
-                        : ''
-                }: `,
-            );
+            terminal(question);
             this.value = Number(
                 await terminal.inputField({
                     default: this.defaultValue?.toString() ?? '',
                     minLength: this.isRequired() ? 1 : 0,
                 }).promise,
             );
+            if (
+                isNaN(this.value) ||
+                this.value < this.min ||
+                this.value > this.max
+            ) {
+                terminal.red('\nInvalid number! Please try again.');
+            }
         }
         terminal('\n');
         this.config.set(this);
