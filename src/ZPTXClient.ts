@@ -92,12 +92,15 @@ export class ZPTXClient extends Client {
     constructor(options: ClientOptions, config: Config) {
         super(options);
         this.config = config;
-        const label = 'Skeleton';
+        const defaultLabel = 'Skeleton';
         this.logger = {
-            error: (message): Logger => logger.error({ message, label }),
-            warn: (message): Logger => logger.warn({ message, label }),
-            info: (message): Logger => logger.info({ message, label }),
-            verbose: (message): Logger =>
+            error: (message, label = defaultLabel): Logger =>
+                logger.error({ message, label }),
+            warn: (message, label = defaultLabel): Logger =>
+                logger.warn({ message, label }),
+            info: (message, label = defaultLabel): Logger =>
+                logger.info({ message, label }),
+            verbose: (message, label = defaultLabel): Logger =>
                 this.verbose ? logger.verbose({ message, label }) : logger,
         };
     }
