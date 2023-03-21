@@ -37,6 +37,24 @@ export class NumberConfigItem extends ConfigItem {
         this.max = options?.max;
     }
 
+    private async askForInput(question: string): Promise<number> {
+        terminal(`${question}: `);
+        return Number(
+            await terminal.inputField({
+                default: this.defaultValue?.toString() ?? '',
+                minLength: this.isRequired() ? 1 : 0,
+            }).promise,
+        );
+    }
+
+    private valueSatisfiesConstraints(): boolean {
+        return (
+            !isNaN(this.value) &&
+            this.value >= this.min &&
+            this.value <= this.max
+        );
+    }
+
     /**
      * Set up the config item by asking the user for input
      * @param override - Whether or not to override the current value if it exists
@@ -45,32 +63,19 @@ export class NumberConfigItem extends ConfigItem {
     async setup(override?: boolean): Promise<number> {
         if (!override && this.value !== undefined) return this.value;
         this.printSetupHeader();
-        const question = `\nEnter a number${
-            this.min && !this.max
-                ? ` from ${this.min}`
-                : !this.min && this.max
-                ? ` less than or equal to ${this.max}`
-                : this.min && this.max
-                ? ` between ${this.min} and ${this.max}`
-                : ''
-        }: `;
-        while (
-            isNaN(this.value) ||
-            this.value < this.min ||
-            this.value > this.max
-        ) {
-            terminal(question);
-            this.value = Number(
-                await terminal.inputField({
-                    default: this.defaultValue?.toString() ?? '',
-                    minLength: this.isRequired() ? 1 : 0,
-                }).promise,
+        while (!this.valueSatisfiesConstraints()) {
+            this.value = await this.askForInput(
+                `\nEnter a number${
+                    this.min && !this.max
+                        ? ` from ${this.min}`
+                        : !this.min && this.max
+                        ? ` less than or equal to ${this.max}`
+                        : this.min && this.max
+                        ? ` between ${this.min} and ${this.max}`
+                        : ''
+                }`,
             );
-            if (
-                isNaN(this.value) ||
-                this.value < this.min ||
-                this.value > this.max
-            ) {
+            if (!this.valueSatisfiesConstraints()) {
                 terminal.red('\nInvalid number! Please try again.');
             }
         }
