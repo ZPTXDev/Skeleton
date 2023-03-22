@@ -6,3 +6,5 @@ node_modules/
 
 # Ignore code coverage
 coverage/
+
+logs/
