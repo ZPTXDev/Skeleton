@@ -7,6 +7,7 @@ const config: Config.InitialOptions = {
         '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
     },
     moduleNameMapper: {
+        '^(\\.{1,2}/.*/llhttp\\.wasm\\.js)$': '$1',
         'discord.js': 'discord.js',
         '(.+)\\.js': '$1',
     },
