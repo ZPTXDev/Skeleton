@@ -5,6 +5,10 @@ import { Language } from './Language.js';
 export class LanguageManager {
     private _languages: Record<string, Language> = {};
 
+    /**
+     * Creates an instance of LanguageManager.
+     * @param baseURL - The base URL of the file
+     */
     async initialize(baseURL: string): Promise<void> {
         const folders = readdirSync(
             getAbsoluteFileURL(baseURL, ['..', 'locales']),
@@ -30,10 +34,18 @@ export class LanguageManager {
         }
     }
 
+    /**
+     * Gets a language by locale
+     * @param locale - The locale of the language
+     * @returns The language
+     */
     get(locale: string): Language {
         return this._languages[locale];
     }
 
+    /**
+     * The languages
+     */
     get languages(): string[] {
         return Object.keys(this.languages);
     }
