@@ -3,7 +3,7 @@ import { readdirSync } from 'fs';
 import { Language } from './Language.js';
 
 export class LanguageManager {
-    private languages: Record<string, Language> = {};
+    private _languages: Record<string, Language> = {};
 
     async initialize(baseURL: string): Promise<void> {
         const folders = readdirSync(
@@ -26,15 +26,15 @@ export class LanguageManager {
                 const categoryName = file.split('.')[0].toUpperCase();
                 strings[categoryName] = categoryProps.default;
             }
-            this.languages[folder] = new Language(folder, strings);
+            this._languages[folder] = new Language(folder, strings);
         }
     }
 
     get(locale: string): Language {
-        return this.languages[locale];
+        return this._languages[locale];
     }
 
-    getLanguages(): string[] {
+    get languages(): string[] {
         return Object.keys(this.languages);
     }
 }
