@@ -6,4 +6,5 @@ export * from './Logger.js';
 export * from './NumberConfigItem.js';
 export * from './NumberConfigItemRequireCondition.js';
 export * from './StringConfigItem.js';
+export * from './util.js';
 export * from './ZPTXClient.js';
