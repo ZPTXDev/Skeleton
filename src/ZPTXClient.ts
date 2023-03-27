@@ -37,6 +37,7 @@ type AcceptedInteraction =
 
 export class ZPTXClient extends Client {
     config: Config;
+    data = {};
     languages = new LanguageManager();
     protected hookHandlers = {
         commands: new Collection<
