@@ -69,8 +69,10 @@
     "typescript": "^5.0.2"
   },
   "dependencies": {
+    "@keyv/sqlite": "^3.6.5",
     "@zptxdev/zptx-lib": "^1.1.0",
     "discord.js": "^14.8.0",
+    "keyv": "^4.5.2",
     "lodash-es": "^4.17.21",
     "terminal-kit": "^3.0.0",
     "winston": "^3.8.2"
