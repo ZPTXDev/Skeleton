@@ -59,7 +59,7 @@ export class ZPTXClient extends Client {
         .slice(2)
         .map((argv): string => argv.toLowerCase())
         .includes('--verbose');
-    private logger: {
+    logger: {
         error: (message: string) => Logger;
         warn: (message: string) => Logger;
         info: (message: string) => Logger;
