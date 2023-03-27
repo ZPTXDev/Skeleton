@@ -11,6 +11,7 @@ import { readdirSync } from 'fs';
 import terminalKitPackage from 'terminal-kit';
 import type { Logger } from 'winston';
 import type { Config } from './Config.js';
+import { LanguageManager } from './LanguageManager.js';
 import { logger } from './Logger.js';
 const { terminal } = terminalKitPackage;
 
@@ -36,6 +37,7 @@ type AcceptedInteraction =
 
 export class ZPTXClient extends Client {
     config: Config;
+    languages = new LanguageManager();
     protected hookHandlers = {
         commands: new Collection<
             string,
