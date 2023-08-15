@@ -20,7 +20,7 @@ export const logger = createLogger({
         format.printf(
             (info): string =>
                 `${info.timestamp} [${
-                    info.label
+                    info.label ?? 'Unknown'
                 }] ${info.level.toUpperCase()}: ${info.message}`,
         ),
     ),
