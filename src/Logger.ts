@@ -33,7 +33,10 @@ export const logger = createLogger({
                         'meaningless',
                         info.timestamp,
                     );
-                    info.label = colorizer.colorize('meaningless', info.label);
+                    info.label = colorizer.colorize(
+                        'meaningless',
+                        info.label ?? 'Unknown',
+                    );
                     info.message = colorizer.colorize(
                         `${info.level}Msg`,
                         info.message,
@@ -46,7 +49,9 @@ export const logger = createLogger({
                 format.colorize(),
                 format.printf(
                     (info): string =>
-                        `${info.timestamp} ${info.level} ${info.label} ${info.message}`,
+                        `${info.timestamp} ${info.level} ${
+                            info.label ?? 'Unknown'
+                        } ${info.message}`,
                 ),
             ),
         }),
