@@ -8,6 +8,7 @@ const config: Config.InitialOptions = {
     },
     moduleNameMapper: {
         '^(\\.{1,2}/.*/llhttp\\.wasm\\.js)$': '$1',
+        'magic-bytes.js': 'magic-bytes.js',
         'discord.js': 'discord.js',
         '(.+)\\.js': '$1',
     },
