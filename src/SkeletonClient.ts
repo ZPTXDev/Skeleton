@@ -173,11 +173,11 @@ export class SkeletonClient extends Client {
                         .charAt(0)
                         .toLowerCase() + handlerType.slice(1)) as
                         | keyof typeof this.interactionHandlers
-                        | 'events';
+                        | 'event';
                     /** Handler name without file extension */
                     const handlerName = handler.slice(0, -3);
                     // If it's an event handler, add it to the event handlers collection
-                    if (camelCaseHandlerType === 'events') {
+                    if (camelCaseHandlerType === 'event') {
                         let eventHandlers: EventObject[] = [];
                         // Event already exists in the collection
                         if (this.eventHandlers.has(handlerName)) {
