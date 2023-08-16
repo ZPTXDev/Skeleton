@@ -26,6 +26,11 @@ type EventObject = {
 };
 
 /**
+ * Placeholder logger function
+ */
+type LoggerFunction = (message: string) => Logger;
+
+/**
  * The accepted interaction types
  */
 type AcceptedInteraction =
@@ -34,6 +39,8 @@ type AcceptedInteraction =
     | CommandInteraction
     | ModalSubmitInteraction
     | AnySelectMenuInteraction;
+
+const SkeletonLabel = 'Skeleton';
 
 export class SkeletonClient extends Client {
     // One interaction name can only have one handler
@@ -65,11 +72,23 @@ export class SkeletonClient extends Client {
         .slice(2)
         .map((argv): string => argv.toLowerCase())
         .includes('--verbose');
+    private _logger: { [key: string]: LoggerFunction } = {
+        error: (message): Logger =>
+            logger.error({ message, label: SkeletonLabel }),
+        warn: (message): Logger =>
+            logger.warn({ message, label: SkeletonLabel }),
+        info: (message): Logger =>
+            logger.info({ message, label: SkeletonLabel }),
+        verbose: (message): Logger =>
+            this.verbose
+                ? logger.verbose({ message, label: SkeletonLabel })
+                : logger,
+    };
     logger: {
-        error: (message: string) => Logger;
-        warn: (message: string) => Logger;
-        info: (message: string) => Logger;
-        verbose: (message: string) => Logger;
+        error: LoggerFunction;
+        warn: LoggerFunction;
+        info: LoggerFunction;
+        verbose: LoggerFunction;
     };
 
     /**
@@ -80,21 +99,25 @@ export class SkeletonClient extends Client {
      *         intents: [
      *             GatewayIntentBits.Guilds,
      *         ],
+     *         partials: [
+     *             Partials.Channel
+     *         ],
      *     },
+     *     'MusicBot'
      * );
      * @param options - discord.js ClientOptions
+     * @param appName - The name of the application
      */
-    constructor(options: ClientOptions) {
+    constructor(options: ClientOptions, appName?: string) {
         super(options);
-        const defaultLabel = 'Skeleton';
         this.logger = {
-            error: (message, label = defaultLabel): Logger =>
+            error: (message, label = appName): Logger =>
                 logger.error({ message, label }),
-            warn: (message, label = defaultLabel): Logger =>
+            warn: (message, label = appName): Logger =>
                 logger.warn({ message, label }),
-            info: (message, label = defaultLabel): Logger =>
+            info: (message, label = appName): Logger =>
                 logger.info({ message, label }),
-            verbose: (message, label = defaultLabel): Logger =>
+            verbose: (message, label = appName): Logger =>
                 this.verbose ? logger.verbose({ message, label }) : logger,
         };
     }
@@ -107,13 +130,13 @@ export class SkeletonClient extends Client {
      * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
-        this.logger.info('Initializing client');
+        this._logger.info('Initializing client');
         // Find all modules within the modules directory
         /** Modules (all folders in the 'modules' directory) */
         const modules = readdirSync(getAbsoluteFileURL(baseURL, ['modules']));
-        this.logger.verbose('Loading modules');
+        this._logger.verbose('Loading modules');
         for await (const module of modules) {
-            this.logger.verbose(
+            this._logger.verbose(
                 `Loading ${module} (${modules.indexOf(module) + 1}/${
                     modules.length
                 })`,
@@ -133,7 +156,7 @@ export class SkeletonClient extends Client {
                 ].includes(folder),
             );
             for await (const handlerType of foundAcceptedHandlerTypes) {
-                this.logger.verbose(
+                this._logger.verbose(
                     `Loading ${module} > ${handlerType} (${
                         foundAcceptedHandlerTypes.indexOf(handlerType) + 1
                     }/${foundAcceptedHandlerTypes.length})`,
@@ -151,7 +174,7 @@ export class SkeletonClient extends Client {
                         handler.endsWith('.ts') || handler.endsWith('.js'),
                 );
                 for await (const handler of handlers) {
-                    this.logger.verbose(
+                    this._logger.verbose(
                         `Loading ${module} > ${handlerType} > ${handler} (${
                             handlers.indexOf(handler) + 1
                         }/${handlers.length})`,
@@ -196,17 +219,17 @@ export class SkeletonClient extends Client {
                         handlerName,
                         handlerExecute,
                     );
-                    this.logger.verbose(
+                    this._logger.verbose(
                         `Loaded ${module} > ${handlerType} > ${handler}`,
                     );
                 }
-                this.logger.verbose(`Loaded ${module} > ${handlerType}`);
+                this._logger.verbose(`Loaded ${module} > ${handlerType}`);
             }
-            this.logger.verbose(`Loaded ${module}`);
+            this._logger.verbose(`Loaded ${module}`);
         }
-        this.logger.verbose('Loaded modules');
+        this._logger.verbose('Loaded modules');
         // Set up our own interactionCreate event handler
-        this.logger.verbose('Setting up built-in interactionCreate handler');
+        this._logger.verbose('Setting up built-in interactionCreate handler');
         const interactionHandler = async (
             interaction: AcceptedInteraction,
         ): Promise<void> => {
@@ -231,7 +254,7 @@ export class SkeletonClient extends Client {
             } else if (!interaction.isAutocomplete()) {
                 details = `${interaction.constructor.name} ${interaction.customId}`;
             }
-            if (details) this.logger.info(`Processing ${details} ${source}`);
+            if (details) this._logger.info(`Processing ${details} ${source}`);
             if (interaction.isAutocomplete()) {
                 execute = this.interactionHandlers.autocomplete.get(
                     interaction.commandName,
@@ -240,7 +263,7 @@ export class SkeletonClient extends Client {
                 execute = this.interactionHandlers.button.get(
                     interaction.customId.split(':')[0],
                 );
-                this.logger.verbose(
+                this._logger.verbose(
                     `Matched button handler ${
                         interaction.customId.split(':')[0]
                     }`,
@@ -249,14 +272,14 @@ export class SkeletonClient extends Client {
                 execute = this.interactionHandlers.command.get(
                     interaction.commandName,
                 );
-                this.logger.verbose(
+                this._logger.verbose(
                     `Matched command handler /${interaction.commandName}`,
                 );
             } else if (interaction.isModalSubmit()) {
                 execute = this.interactionHandlers.modalSubmit.get(
                     interaction.customId.split(':')[0],
                 );
-                this.logger.verbose(
+                this._logger.verbose(
                     `Matched modal submit handler ${
                         interaction.customId.split(':')[0]
                     }`,
@@ -265,7 +288,7 @@ export class SkeletonClient extends Client {
                 execute = this.interactionHandlers.selectMenu.get(
                     interaction.customId.split(':')[0],
                 );
-                this.logger.verbose(
+                this._logger.verbose(
                     `Matched select menu handler ${
                         interaction.customId.split(':')[0]
                     }`,
@@ -273,16 +296,16 @@ export class SkeletonClient extends Client {
             }
             if (execute) {
                 if (details) {
-                    this.logger.info(`Responding to ${details} ${source}`);
+                    this._logger.info(`Responding to ${details} ${source}`);
                 }
                 await execute(interaction);
                 return;
             }
-            if (details) this.logger.warn(`Ignoring ${details} ${source}`);
+            if (details) this._logger.warn(`Ignoring ${details} ${source}`);
         };
-        this.logger.verbose('Built-in interactionCreate handler set up');
+        this._logger.verbose('Built-in interactionCreate handler set up');
         // Add our interaction handler to the event handlers
-        this.logger.verbose(
+        this._logger.verbose(
             'Adding built-in interactionCreate handler to event handlers',
         );
         const interactionHandlerObject = {
@@ -298,11 +321,11 @@ export class SkeletonClient extends Client {
                 interactionHandlerObject,
             ]);
         }
-        this.logger.verbose(
+        this._logger.verbose(
             'Added built-in interactionCreate handler to event handlers',
         );
         // Add all the event handlers
-        this.logger.verbose('Setting up event handlers');
+        this._logger.verbose('Setting up event handlers');
         this.eventHandlers.forEach((eventHandler, key): void => {
             eventHandler.forEach((handler): void => {
                 if (handler.once) {
@@ -312,7 +335,7 @@ export class SkeletonClient extends Client {
                 this.on(key, handler.execute);
             });
         });
-        this.logger.verbose('Event handlers set up');
-        this.logger.info('Initialized client');
+        this._logger.verbose('Event handlers set up');
+        this._logger.info('Initialized client');
     }
 }
