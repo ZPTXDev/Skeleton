@@ -256,7 +256,7 @@ export class SkeletonClient extends Client {
             let details = '';
             if (interaction.isCommand()) {
                 details = `command /${interaction.commandName}${
-                    interaction.options.data.length > 0
+                    interaction.options?.data.length > 0
                         ? ` ${interaction.options.data
                               .map(
                                   (option): string =>
