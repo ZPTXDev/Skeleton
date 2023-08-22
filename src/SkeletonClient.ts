@@ -6,6 +6,8 @@ import type {
     ClientOptions,
     CommandInteraction,
     ModalSubmitInteraction,
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    SlashCommandBuilder,
 } from 'discord.js';
 import { Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
@@ -66,6 +68,8 @@ export class SkeletonClient extends Client {
             (interaction: AnySelectMenuInteraction) => Promise<void>
         >(),
     };
+    /** Command data stored internally for use in deploying commands */
+    private commandData: SlashCommandBuilder[] = [];
     // One event can have multiple handlers
     protected eventHandlers = new Collection<string, EventObject[]>();
     private verbose = process.argv
@@ -183,6 +187,7 @@ export class SkeletonClient extends Client {
                     const {
                         execute: handlerExecute,
                         once: handlerOnce = false,
+                        data: handlerData,
                     } = await import(
                         getAbsoluteFileURL(baseURL, [
                             'modules',
@@ -213,6 +218,10 @@ export class SkeletonClient extends Client {
                         });
                         this.eventHandlers.set(handlerName, eventHandlers);
                         continue;
+                    }
+                    if (camelCaseHandlerType === 'command') {
+                        // Add the command data to the command data array
+                        this.commandData.push(handlerData);
                     }
                     // Otherwise, add it to the relevant interaction handlers collection
                     this.interactionHandlers[camelCaseHandlerType].set(
@@ -337,5 +346,19 @@ export class SkeletonClient extends Client {
         });
         this._logger.verbose('Event handlers set up');
         this._logger.info('Initialized client');
+    }
+
+    /**
+     * Deploys application commands. Only use after you've initialized the client.
+     */
+    async deployCommands(): Promise<void> {
+        this._logger.info('Deploying commands');
+        await this.application.commands.set(
+            this.commandData.map(
+                (data): RESTPostAPIChatInputApplicationCommandsJSONBody =>
+                    data.toJSON(),
+            ),
+        );
+        this._logger.info('Deployed commands');
     }
 }
