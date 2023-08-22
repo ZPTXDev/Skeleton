@@ -338,6 +338,33 @@ export class SkeletonClient extends Client {
         this._logger.verbose(
             'Added built-in interactionCreate handler to event handlers',
         );
+        // Set up our own ready event handler if deploy flag is set
+        if (this.deploy) {
+            this._logger.verbose('Setting up built-in ready handler');
+            const readyHandler = async (): Promise<void> => {
+                this._logger.info(
+                    'Triggering command deployment because --deploy flag is set',
+                );
+                await this.deployCommands();
+            };
+            this._logger.verbose('Built-in ready handler set up');
+            // Add our ready handler to the event handlers
+            this._logger.verbose(
+                'Adding built-in ready handler to event handlers',
+            );
+            const readyHandlerObject = {
+                once: true,
+                execute: readyHandler,
+            };
+            if (this.eventHandlers.has('ready')) {
+                this.eventHandlers.get('ready').push(readyHandlerObject);
+            } else {
+                this.eventHandlers.set('ready', [readyHandlerObject]);
+            }
+            this._logger.verbose(
+                'Added built-in ready handler to event handlers',
+            );
+        }
         // Add all the event handlers
         this._logger.verbose('Setting up event handlers');
         this.eventHandlers.forEach((eventHandler, key): void => {
@@ -376,14 +403,5 @@ export class SkeletonClient extends Client {
             ),
         );
         this._logger.info('Deployed commands');
-    }
-
-    override async login(token?: string): Promise<string> {
-        const login = await super.login(token);
-        if (this.deploy) {
-            this._logger.info('Deploying commands from --deploy flag');
-            await this.deployCommands();
-        }
-        return login;
     }
 }
