@@ -281,7 +281,7 @@ export class SkeletonClient extends Client {
             } else if (!interaction.isAutocomplete()) {
                 details = `${interaction.constructor.name} ${interaction.customId}`;
             }
-            if (details) this._logger.info(`Processing ${details} ${source}`);
+            if (details) this._logger.info(`Received ${details} ${source}`);
             if (interaction.isAutocomplete()) {
                 execute = this.interactionHandlers.autocomplete.get(
                     interaction.commandName,
@@ -323,7 +323,7 @@ export class SkeletonClient extends Client {
             }
             if (execute) {
                 if (details) {
-                    this._logger.info(`Responding to ${details} ${source}`);
+                    this._logger.verbose(`Responding to ${details} ${source}`);
                 }
                 await execute(interaction);
                 return;
