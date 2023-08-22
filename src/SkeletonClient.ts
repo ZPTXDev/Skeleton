@@ -45,6 +45,7 @@ type AcceptedInteraction =
 const SkeletonLabel = 'Skeleton';
 
 export class SkeletonClient extends Client {
+    private initialized = false;
     // One interaction name can only have one handler
     protected interactionHandlers = {
         autocomplete: new Collection<
@@ -76,6 +77,10 @@ export class SkeletonClient extends Client {
         .slice(2)
         .map((argv): string => argv.toLowerCase())
         .includes('--verbose');
+    private deploy = process.argv
+        .slice(2)
+        .map((argv): string => argv.toLowerCase())
+        .includes('--deploy');
     private _logger: { [key: string]: LoggerFunction } = {
         error: (message): Logger =>
             logger.error({ message, label: SkeletonLabel }),
@@ -346,12 +351,22 @@ export class SkeletonClient extends Client {
         });
         this._logger.verbose('Event handlers set up');
         this._logger.info('Initialized client');
+        this.initialized = true;
+        if (this.deploy) {
+            this._logger.info('Automatically deploying commands due to flag');
+            await this.deployCommands();
+        }
     }
 
     /**
      * Deploys application commands. Only use after you've initialized the client.
      */
     async deployCommands(): Promise<void> {
+        if (!this.initialized) {
+            throw new Error(
+                'You must initialize the client before deploying commands',
+            );
+        }
         this._logger.info('Deploying commands');
         await this.application.commands.set(
             this.commandData.map(
