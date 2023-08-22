@@ -352,19 +352,20 @@ export class SkeletonClient extends Client {
         this._logger.verbose('Event handlers set up');
         this._logger.info('Initialized client');
         this.initialized = true;
-        if (this.deploy) {
-            this._logger.info('Automatically deploying commands due to flag');
-            await this.deployCommands();
-        }
     }
 
     /**
-     * Deploys application commands. Only use after you've initialized the client.
+     * Deploys application commands. Only use after you've initialized the client and logged in to Discord.
      */
     async deployCommands(): Promise<void> {
         if (!this.initialized) {
             throw new Error(
                 'You must initialize the client before deploying commands',
+            );
+        }
+        if (!this.isReady()) {
+            throw new Error(
+                'You must log in to Discord before deploying commands',
             );
         }
         this._logger.info('Deploying commands');
@@ -375,5 +376,14 @@ export class SkeletonClient extends Client {
             ),
         );
         this._logger.info('Deployed commands');
+    }
+
+    override async login(token?: string): Promise<string> {
+        const login = await super.login(token);
+        if (this.deploy) {
+            this._logger.info('Deploying commands from --deploy flag');
+            await this.deployCommands();
+        }
+        return login;
     }
 }
