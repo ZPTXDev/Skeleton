@@ -9,7 +9,7 @@ import type {
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     SlashCommandBuilder,
 } from 'discord.js';
-import { Client, Collection } from 'discord.js';
+import { ApplicationCommandOptionType, Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import type { Logger } from 'winston';
 import { logger } from './Logger.js';
@@ -255,9 +255,22 @@ export class SkeletonClient extends Client {
             }`;
             let details = '';
             if (interaction.isCommand()) {
-                details = `command /${interaction.commandName}${
-                    interaction.options?.data.length > 0
-                        ? ` ${interaction.options.data
+                let commandName = interaction.commandName;
+                let options = interaction.options?.data;
+                if (options?.length > 0) {
+                    while (
+                        options[0]?.type ===
+                            ApplicationCommandOptionType.Subcommand ||
+                        options[0]?.type ===
+                            ApplicationCommandOptionType.SubcommandGroup
+                    ) {
+                        commandName += ` ${options[0].name}`;
+                        options = options[0].options;
+                    }
+                }
+                details = `command /${commandName}${
+                    options?.length > 0
+                        ? ` ${options
                               .map(
                                   (option): string =>
                                       `${option.name}:${option.value}`,
