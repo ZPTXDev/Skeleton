@@ -52,7 +52,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-transform-modules-commonjs": "^7.22.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.22.11",
     "@types/jest": "^29.5.4",
     "@types/lodash-es": "^4.17.8",
     "@types/node": "^20.5.4",
