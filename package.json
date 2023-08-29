@@ -13,6 +13,7 @@
   "files": [
     "dist/**"
   ],
+  "exports": "./dist/index.js",
   "scripts": {
     "build": "rimraf dist/ && tsc",
     "test": "jest --coverage"
