@@ -9,10 +9,11 @@ import type {
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     SlashCommandBuilder,
 } from 'discord.js';
-import { ApplicationCommandOptionType, Client, Collection } from 'discord.js';
+import { Client, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import type { Logger } from 'winston';
 import { logger } from './Logger.js';
+import { extractCommandDetails } from './utils.js';
 
 /**
  * Placeholder event handler function
@@ -132,6 +133,93 @@ export class SkeletonClient extends Client {
     }
 
     /**
+     * Internal interactionCreate event handler
+     * @param interaction - The interaction to handle
+     */
+    private async interactionHandler(
+        interaction: AcceptedInteraction,
+    ): Promise<void> {
+        let execute: (
+            interaction: AcceptedInteraction,
+        ) => Promise<void> | undefined;
+        const source = `from UID ${interaction.user.id}${
+            interaction.inGuild() ? ` in GID ${interaction.guildId}` : ''
+        }`;
+        let details = '';
+        if (interaction.isCommand()) {
+            const { commandName, options } = extractCommandDetails(interaction);
+            details = `command /${commandName}${
+                options?.length > 0
+                    ? ` ${options
+                          .map(
+                              (option): string =>
+                                  `${option.name}:${option.value}`,
+                          )
+                          .join(' ')}`
+                    : ''
+            }`;
+        } else if (!interaction.isAutocomplete()) {
+            details = `${interaction.constructor.name} ${interaction.customId}`;
+        }
+        if (details) this._logger.info(`Received ${details} ${source}`);
+        if (interaction.isAutocomplete()) {
+            execute = this.interactionHandlers.autocomplete.get(
+                interaction.commandName,
+            );
+        } else if (interaction.isButton()) {
+            execute = this.interactionHandlers.button.get(
+                interaction.customId.split(':')[0],
+            );
+            this._logger.verbose(
+                `Matched button handler ${interaction.customId.split(':')[0]}`,
+            );
+        } else if (interaction.isCommand()) {
+            execute = this.interactionHandlers.command.get(
+                interaction.commandName,
+            );
+            this._logger.verbose(
+                `Matched command handler /${interaction.commandName}`,
+            );
+        } else if (interaction.isModalSubmit()) {
+            execute = this.interactionHandlers.modalSubmit.get(
+                interaction.customId.split(':')[0],
+            );
+            this._logger.verbose(
+                `Matched modal submit handler ${
+                    interaction.customId.split(':')[0]
+                }`,
+            );
+        } else if (interaction.isAnySelectMenu()) {
+            execute = this.interactionHandlers.selectMenu.get(
+                interaction.customId.split(':')[0],
+            );
+            this._logger.verbose(
+                `Matched select menu handler ${
+                    interaction.customId.split(':')[0]
+                }`,
+            );
+        }
+        if (execute) {
+            if (details) {
+                this._logger.verbose(`Responding to ${details} ${source}`);
+            }
+            await execute(interaction);
+            return;
+        }
+        if (details) this._logger.warn(`Ignoring ${details} ${source}`);
+    }
+
+    /**
+     * Internal ready event handler
+     */
+    private async readyHandler(): Promise<void> {
+        this._logger.info(
+            'Triggering command deployment because --deploy flag is set',
+        );
+        await this.deployCommands();
+    }
+
+    /**
      * Initialize the client, sets up the event handlers
      * @example
      * await client.initialize(import.meta.url);
@@ -242,102 +330,13 @@ export class SkeletonClient extends Client {
             this._logger.verbose(`Loaded ${module}`);
         }
         this._logger.verbose('Loaded modules');
-        // Set up our own interactionCreate event handler
-        this._logger.verbose('Setting up built-in interactionCreate handler');
-        const interactionHandler = async (
-            interaction: AcceptedInteraction,
-        ): Promise<void> => {
-            let execute: (
-                interaction: AcceptedInteraction,
-            ) => Promise<void> | undefined;
-            const source = `from UID ${interaction.user.id}${
-                interaction.inGuild() ? ` in GID ${interaction.guildId}` : ''
-            }`;
-            let details = '';
-            if (interaction.isCommand()) {
-                let commandName = interaction.commandName;
-                let options = interaction.options?.data;
-                if (options?.length > 0) {
-                    while (
-                        options[0]?.type ===
-                            ApplicationCommandOptionType.Subcommand ||
-                        options[0]?.type ===
-                            ApplicationCommandOptionType.SubcommandGroup
-                    ) {
-                        commandName += ` ${options[0].name}`;
-                        options = options[0].options;
-                    }
-                }
-                details = `command /${commandName}${
-                    options?.length > 0
-                        ? ` ${options
-                              .map(
-                                  (option): string =>
-                                      `${option.name}:${option.value}`,
-                              )
-                              .join(' ')}`
-                        : ''
-                }`;
-            } else if (!interaction.isAutocomplete()) {
-                details = `${interaction.constructor.name} ${interaction.customId}`;
-            }
-            if (details) this._logger.info(`Received ${details} ${source}`);
-            if (interaction.isAutocomplete()) {
-                execute = this.interactionHandlers.autocomplete.get(
-                    interaction.commandName,
-                );
-            } else if (interaction.isButton()) {
-                execute = this.interactionHandlers.button.get(
-                    interaction.customId.split(':')[0],
-                );
-                this._logger.verbose(
-                    `Matched button handler ${
-                        interaction.customId.split(':')[0]
-                    }`,
-                );
-            } else if (interaction.isCommand()) {
-                execute = this.interactionHandlers.command.get(
-                    interaction.commandName,
-                );
-                this._logger.verbose(
-                    `Matched command handler /${interaction.commandName}`,
-                );
-            } else if (interaction.isModalSubmit()) {
-                execute = this.interactionHandlers.modalSubmit.get(
-                    interaction.customId.split(':')[0],
-                );
-                this._logger.verbose(
-                    `Matched modal submit handler ${
-                        interaction.customId.split(':')[0]
-                    }`,
-                );
-            } else if (interaction.isAnySelectMenu()) {
-                execute = this.interactionHandlers.selectMenu.get(
-                    interaction.customId.split(':')[0],
-                );
-                this._logger.verbose(
-                    `Matched select menu handler ${
-                        interaction.customId.split(':')[0]
-                    }`,
-                );
-            }
-            if (execute) {
-                if (details) {
-                    this._logger.verbose(`Responding to ${details} ${source}`);
-                }
-                await execute(interaction);
-                return;
-            }
-            if (details) this._logger.warn(`Ignoring ${details} ${source}`);
-        };
-        this._logger.verbose('Built-in interactionCreate handler set up');
         // Add our interaction handler to the event handlers
         this._logger.verbose(
             'Adding built-in interactionCreate handler to event handlers',
         );
         const interactionHandlerObject = {
             once: false,
-            execute: interactionHandler,
+            execute: this.interactionHandler,
         };
         if (this.eventHandlers.has('interactionCreate')) {
             this.eventHandlers
@@ -353,21 +352,13 @@ export class SkeletonClient extends Client {
         );
         // Set up our own ready event handler if deploy flag is set
         if (this.deploy) {
-            this._logger.verbose('Setting up built-in ready handler');
-            const readyHandler = async (): Promise<void> => {
-                this._logger.info(
-                    'Triggering command deployment because --deploy flag is set',
-                );
-                await this.deployCommands();
-            };
-            this._logger.verbose('Built-in ready handler set up');
             // Add our ready handler to the event handlers
             this._logger.verbose(
                 'Adding built-in ready handler to event handlers',
             );
             const readyHandlerObject = {
                 once: true,
-                execute: readyHandler,
+                execute: this.readyHandler,
             };
             if (this.eventHandlers.has('ready')) {
                 this.eventHandlers.get('ready').push(readyHandlerObject);
