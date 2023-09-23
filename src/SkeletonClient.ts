@@ -126,7 +126,7 @@ export class SkeletonClient extends Client {
      * @param options - discord.js ClientOptions
      * @param appName - The name of the application
      */
-    constructor(options: ClientOptions, appName: string);
+    constructor(options: ClientOptions, appName?: string);
     /**
      * Creates an instance of SkeletonClient.
      * @example
