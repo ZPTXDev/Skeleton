@@ -146,7 +146,8 @@ export class SkeletonClient extends Client {
         const source = `from UID ${interaction.user.id}${
             interaction.inGuild() ? ` in GID ${interaction.guildId}` : ''
         }`;
-        let details = '';
+        let details = '',
+            verboseLog = '';
         if (interaction.isCommand()) {
             const { commandName, options } = extractCommandDetails(interaction);
             details = `${interaction.constructor.name} /${commandName}${
@@ -171,36 +172,31 @@ export class SkeletonClient extends Client {
             execute = this.interactionHandlers.button.get(
                 interaction.customId.split(':')[0],
             );
-            this._logger.verbose(
-                `Matched button handler ${interaction.customId.split(':')[0]}`,
-            );
+            verboseLog = `Matched button handler ${
+                interaction.customId.split(':')[0]
+            }`;
         } else if (interaction.isCommand()) {
             execute = this.interactionHandlers.command.get(
                 interaction.commandName,
             );
-            this._logger.verbose(
-                `Matched command handler /${interaction.commandName}`,
-            );
+            verboseLog = `Matched command handler /${interaction.commandName}`;
         } else if (interaction.isModalSubmit()) {
             execute = this.interactionHandlers.modalSubmit.get(
                 interaction.customId.split(':')[0],
             );
-            this._logger.verbose(
-                `Matched modal submit handler ${
+            verboseLog = `Matched modal submit handler ${
                     interaction.customId.split(':')[0]
-                }`,
-            );
+            }`;
         } else if (interaction.isAnySelectMenu()) {
             execute = this.interactionHandlers.selectMenu.get(
                 interaction.customId.split(':')[0],
             );
-            this._logger.verbose(
-                `Matched select menu handler ${
+            verboseLog = `Matched select menu handler ${
                     interaction.customId.split(':')[0]
-                }`,
-            );
+            }`;
         }
         if (execute) {
+            if (verboseLog) this._logger.verbose(verboseLog);
             if (details) {
                 this._logger.verbose(`Responding to ${details} ${source}`);
             }
