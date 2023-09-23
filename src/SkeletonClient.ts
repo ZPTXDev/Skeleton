@@ -5,11 +5,12 @@ import type {
     ButtonInteraction,
     ClientOptions,
     CommandInteraction,
+    Message,
     ModalSubmitInteraction,
     RESTPostAPIChatInputApplicationCommandsJSONBody,
     SlashCommandBuilder,
 } from 'discord.js';
-import { Client, Collection } from 'discord.js';
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { readdirSync } from 'fs';
 import type { Logger } from 'winston';
 import { logger } from './Logger.js';
@@ -44,6 +45,7 @@ type AcceptedInteraction =
     | AnySelectMenuInteraction;
 
 const SkeletonLabel = 'Skeleton';
+const mentionPrefix = '@mention ';
 
 export class SkeletonClient extends Client {
     private initialized = false;
@@ -70,6 +72,10 @@ export class SkeletonClient extends Client {
             (interaction: AnySelectMenuInteraction) => Promise<void>
         >(),
     };
+    protected messageCommandHandlers = new Collection<
+        string,
+        (message: Message) => Promise<void>
+    >();
     /** Command data stored internally for use in deploying commands */
     private commandData: SlashCommandBuilder[] = [];
     // One event can have multiple handlers
@@ -82,6 +88,7 @@ export class SkeletonClient extends Client {
         .slice(2)
         .map((argv): string => argv.toLowerCase())
         .includes('--deploy');
+    private prefix: string[] = [];
     /** Internal logger */
     private _logger: { [key: string]: LoggerFunction } = {
         error: (message): Logger =>
@@ -119,8 +126,83 @@ export class SkeletonClient extends Client {
      * @param options - discord.js ClientOptions
      * @param appName - The name of the application
      */
-    constructor(options: ClientOptions, appName?: string) {
+    constructor(options: ClientOptions, appName: string);
+    /**
+     * Creates an instance of SkeletonClient.
+     * @example
+     * const client = new SkeletonClient(
+     *     {
+     *         intents: [
+     *             GatewayIntentBits.Guilds,
+     *         ],
+     *         partials: [
+     *             Partials.Channel
+     *         ],
+     *     },
+     *     { appName: 'MusicBot', prefix: 'm!' }
+     * );
+     * @example
+     * const client = new SkeletonClient(
+     *     {
+     *         intents: [
+     *             GatewayIntentBits.Guilds,
+     *         ],
+     *         partials: [
+     *             Partials.Channel
+     *         ],
+     *     },
+     *     { appName: 'MusicBot', prefix: ['musicbot ', '@mention ', 'm!'] }
+     * );
+     * @param options - discord.js ClientOptions
+     * @param appOptions - Options for the application
+     */
+    constructor(
+        options: ClientOptions,
+        appOptions: { appName?: string; prefix?: string | string[] },
+    );
+    constructor(
+        options: ClientOptions,
+        appNameOrOptions?:
+            | string
+            | { appName?: string; prefix?: string | string[] },
+    ) {
         super(options);
+        let appName: string = undefined;
+        appName =
+            typeof appNameOrOptions === 'string'
+                ? appNameOrOptions
+                : appNameOrOptions?.appName;
+        if (typeof appNameOrOptions !== 'string' && appNameOrOptions?.prefix) {
+            this.prefix = Array.isArray(appNameOrOptions.prefix)
+                ? appNameOrOptions.prefix
+                : [appNameOrOptions.prefix];
+            if (
+                !this.options.intents.has([
+                    GatewayIntentBits.Guilds,
+                    GatewayIntentBits.GuildMessages,
+                ])
+            ) {
+                this._logger.warn(
+                    'The built-in message command handler was enabled as at least one prefix was specified. However, the client was instantiated without the Guilds and/or Guild Messages intent(s) and may not receive messages from servers.',
+                );
+            }
+            if (!this.options.intents.has(GatewayIntentBits.DirectMessages)) {
+                this._logger.warn(
+                    'The built-in message command handler was enabled as at least one prefix was specified. However, the client was instantiated without the Direct Messages intent and may not receive messages through DMs.',
+                );
+            }
+            // If there are any non-mention prefixes and a missing MessageContent intent, inform the user
+            if (
+                this.prefix.filter(
+                    (prefix): boolean => prefix !== mentionPrefix,
+                ).length > 0 &&
+                !this.options.intents.has(GatewayIntentBits.MessageContent)
+            ) {
+                this._logger.warn(
+                    'The built-in message command handler was enabled as at least one prefix was specified. However, the client was instantiated without the Message Content intent and may not be able to access message content, preventing it from responding correctly.',
+                );
+            }
+        }
         this.logger = {
             error: (message, label = appName): Logger =>
                 logger.error({ message, label }),
@@ -185,14 +267,14 @@ export class SkeletonClient extends Client {
                 interaction.customId.split(':')[0],
             );
             verboseLog = `Matched modal submit handler ${
-                    interaction.customId.split(':')[0]
+                interaction.customId.split(':')[0]
             }`;
         } else if (interaction.isAnySelectMenu()) {
             execute = this.interactionHandlers.selectMenu.get(
                 interaction.customId.split(':')[0],
             );
             verboseLog = `Matched select menu handler ${
-                    interaction.customId.split(':')[0]
+                interaction.customId.split(':')[0]
             }`;
         }
         if (execute) {
@@ -207,9 +289,46 @@ export class SkeletonClient extends Client {
     }
 
     /**
-     * Internal ready event handler
+     * Internal messageCreate event handler
+     * @param message - The message to handle
      */
-    private async readyHandler(): Promise<void> {
+    private async messageHandler(message: Message): Promise<void> {
+        const triggeredPrefix = this.prefix.find((prefix): boolean =>
+            message.content.startsWith(prefix),
+        );
+        if (!triggeredPrefix) return;
+        const source = `from UID ${message.author.id}${
+            message.inGuild() ? ` in GID ${message.guildId}` : ''
+        }`;
+        const details = `MessageCommand ${message.content}`;
+        this._logger.info(`Received ${details} ${source}`);
+        const command = message.content
+            .substring(triggeredPrefix.length)
+            .split(' ')[0];
+        const execute = this.messageCommandHandlers.get(command);
+        if (execute) {
+            this._logger.verbose(`Matched message command handler ${command}`);
+            this._logger.verbose(`Responding to ${details} ${source}`);
+            await execute(message);
+            return;
+        }
+        this._logger.warn(`Ignoring ${details} ${source}`);
+    }
+
+    /**
+     * Internal ready event handler for replacing mention prefix with actual mention
+     */
+    private async readyReplaceMentionPrefixHandler(): Promise<void> {
+        this._logger.verbose(
+            'Updating placeholder mention prefix with actual mention',
+        );
+        this.prefix[this.prefix.indexOf(mentionPrefix)] = `<@${this.user.id}> `;
+    }
+
+    /**
+     * Internal ready event handler for triggering command deployment
+     */
+    private async readyCommandDeployHandler(): Promise<void> {
         this._logger.info(
             'Triggering command deployment because --deploy flag is set',
         );
@@ -247,6 +366,7 @@ export class SkeletonClient extends Client {
                     'ModalSubmit',
                     'SelectMenu',
                     'Event',
+                    'MessageCommand',
                 ].includes(folder),
             );
             for await (const handlerType of foundAcceptedHandlerTypes) {
@@ -291,7 +411,8 @@ export class SkeletonClient extends Client {
                         .charAt(0)
                         .toLowerCase() + handlerType.slice(1)) as
                         | keyof typeof this.interactionHandlers
-                        | 'event';
+                        | 'event'
+                        | 'messageCommand';
                     /** Handler name without file extension */
                     const handlerName = handler.slice(0, -3);
                     // If it's an event handler, add it to the event handlers collection
@@ -307,17 +428,52 @@ export class SkeletonClient extends Client {
                             execute: handlerExecute,
                         });
                         this.eventHandlers.set(handlerName, eventHandlers);
-                        continue;
-                    }
-                    if (camelCaseHandlerType === 'command') {
+                    } else if (camelCaseHandlerType === 'messageCommand') {
+                        if (this.messageCommandHandlers.has(handlerName)) {
+                            this._logger.warn(
+                                `Error loading ${module} > ${handlerType} > ${handler}: Handler name is conflicting with a previously loaded handler of the same type; skipping`,
+                            );
+                            continue;
+                        }
+                        this.messageCommandHandlers.set(
+                            handlerName,
+                            handlerExecute,
+                        );
+                    } else if (camelCaseHandlerType === 'command') {
+                        if (
+                            this.commandData.some(
+                                (data): boolean =>
+                                    data.name === handlerData.name,
+                            )
+                        ) {
+                            this._logger.warn(
+                                `Error loading ${module} > ${handlerType} > ${handler}: Slash command data is conflicting with a previously loaded slash command; skipping`,
+                            );
+                            continue;
+                        }
                         // Add the command data to the command data array
                         this.commandData.push(handlerData);
                     }
-                    // Otherwise, add it to the relevant interaction handlers collection
-                    this.interactionHandlers[camelCaseHandlerType].set(
-                        handlerName,
-                        handlerExecute,
-                    );
+                    // FIXME: Why does TypeScript not support typechecking by Array.prototype.includes?
+                    if (
+                        camelCaseHandlerType !== 'event' &&
+                        camelCaseHandlerType !== 'messageCommand'
+                    ) {
+                        if (
+                            this.interactionHandlers[camelCaseHandlerType].has(
+                                handlerName,
+                            )
+                        ) {
+                            this._logger.warn(
+                                `Error loading ${module} > ${handlerType} > ${handler}: Handler name is conflicting with a previously loaded handler of the same type; skipping`,
+                            );
+                            continue;
+                        }
+                        this.interactionHandlers[camelCaseHandlerType].set(
+                            handlerName,
+                            handlerExecute,
+                        );
+                    }
                     this._logger.verbose(
                         `Loaded ${module} > ${handlerType} > ${handler}`,
                     );
@@ -347,22 +503,68 @@ export class SkeletonClient extends Client {
         this._logger.verbose(
             'Added built-in interactionCreate handler to event handlers',
         );
+        // Add our message handler to the event handlers if any prefix is specified
+        if (this.prefix.length > 0) {
+            this._logger.verbose(
+                'Adding built-in messageCreate handler to event handlers',
+            );
+            const messageHandlerObject = {
+                once: false,
+                execute: this.messageHandler,
+            };
+            if (this.eventHandlers.has('messageCreate')) {
+                this.eventHandlers
+                    .get('messageCreate')
+                    .push(messageHandlerObject);
+            } else {
+                this.eventHandlers.set('messageCreate', [messageHandlerObject]);
+            }
+            this._logger.verbose(
+                'Added built-in messageCreate handler to event handlers',
+            );
+        }
+        // Add our ready handler for replacing mention prefix if mention prefix is included in specified prefixes
+        if (this.prefix.includes(mentionPrefix)) {
+            this._logger.verbose(
+                'Adding built-in ready mention prefix replacement handler to event handlers as mention prefix was included',
+            );
+            const readyReplaceMentionPrefixHandlerObject = {
+                once: true,
+                execute: this.readyReplaceMentionPrefixHandler,
+            };
+            if (this.eventHandlers.has('ready')) {
+                this.eventHandlers
+                    .get('ready')
+                    .push(readyReplaceMentionPrefixHandlerObject);
+            } else {
+                this.eventHandlers.set('ready', [
+                    readyReplaceMentionPrefixHandlerObject,
+                ]);
+            }
+            this._logger.verbose(
+                'Added built-in ready mention prefix replacement handler to event handlers',
+            );
+        }
         // Add our ready handler to the event handlers if deploy flag is set
         if (this.deploy) {
             this._logger.verbose(
-                'Adding built-in ready handler to event handlers',
+                'Adding built-in ready command deployment handler to event handlers as deploy flag is set',
             );
-            const readyHandlerObject = {
+            const readyCommandDeployHandlerObject = {
                 once: true,
-                execute: this.readyHandler,
+                execute: this.readyCommandDeployHandler,
             };
             if (this.eventHandlers.has('ready')) {
-                this.eventHandlers.get('ready').push(readyHandlerObject);
+                this.eventHandlers
+                    .get('ready')
+                    .push(readyCommandDeployHandlerObject);
             } else {
-                this.eventHandlers.set('ready', [readyHandlerObject]);
+                this.eventHandlers.set('ready', [
+                    readyCommandDeployHandlerObject,
+                ]);
             }
             this._logger.verbose(
-                'Added built-in ready handler to event handlers',
+                'Added built-in ready command deployment handler to event handlers',
             );
         }
         // Add all the event handlers
