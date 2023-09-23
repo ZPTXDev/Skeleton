@@ -82,6 +82,7 @@ export class SkeletonClient extends Client {
         .slice(2)
         .map((argv): string => argv.toLowerCase())
         .includes('--deploy');
+    /** Internal logger */
     private _logger: { [key: string]: LoggerFunction } = {
         error: (message): Logger =>
             logger.error({ message, label: SkeletonLabel }),
@@ -350,9 +351,8 @@ export class SkeletonClient extends Client {
         this._logger.verbose(
             'Added built-in interactionCreate handler to event handlers',
         );
-        // Set up our own ready event handler if deploy flag is set
+        // Add our ready handler to the event handlers if deploy flag is set
         if (this.deploy) {
-            // Add our ready handler to the event handlers
             this._logger.verbose(
                 'Adding built-in ready handler to event handlers',
             );
