@@ -149,7 +149,7 @@ export class SkeletonClient extends Client {
         let details = '';
         if (interaction.isCommand()) {
             const { commandName, options } = extractCommandDetails(interaction);
-            details = `command /${commandName}${
+            details = `${interaction.constructor.name} /${commandName}${
                 options?.length > 0
                     ? ` ${options
                           .map(
