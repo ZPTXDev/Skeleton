@@ -1,5 +1,5 @@
-import * as DeprecatedLogger from './Logger.js';
-import * as SkeletonClient from './SkeletonClient.js';
+import { logger as DeprecatedLogger } from './Logger.js';
+import { SkeletonClient } from './SkeletonClient.js';
 
 /**
  * @deprecated Use the logger provided by SkeletonClient instead.
