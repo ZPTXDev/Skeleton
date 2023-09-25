@@ -59,7 +59,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: EPMatt/reviewdog-action-tsc@v1.5.0
+      - uses: EPMatt/reviewdog-action-tsc@v1.6.0
         with:
             reporter: github-check
   prettier:
