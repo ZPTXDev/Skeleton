@@ -606,4 +606,18 @@ export class SkeletonClient extends Client {
         );
         this._logger.info('Deployed commands');
     }
+
+    /**
+     * Deletes application commands. Only use after you've logged in to Discord.
+     */
+    async deleteCommands(): Promise<void> {
+        if (!this.isReady()) {
+            throw new Error(
+                'You must log in to Discord before deleting commands',
+            );
+        }
+        this._logger.info('Deleting commands');
+        await this.application.commands.set([]);
+        this._logger.info('Deleted commands');
+    }
 }
