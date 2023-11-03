@@ -1,85 +1,64 @@
 import { getAbsoluteFileURL } from '@zptxdev/zptx-lib';
-import type {
-    AnySelectMenuInteraction,
-    AutocompleteInteraction,
-    ButtonInteraction,
-    ClientOptions,
-    CommandInteraction,
-    Message,
-    ModalSubmitInteraction,
-    RESTPostAPIChatInputApplicationCommandsJSONBody,
-    SlashCommandBuilder,
+import {
+    Client,
+    Collection,
+    GatewayIntentBits,
+    type ClientOptions,
+    type Message,
+    type RESTPostAPIChatInputApplicationCommandsJSONBody,
+    type SlashCommandBuilder,
 } from 'discord.js';
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { readdirSync } from 'fs';
 import type { Logger } from 'winston';
-import { logger } from './Logger.js';
-import { extractCommandDetails } from './utils.js';
-
-/**
- * Placeholder event handler function
- */
-type EventHandler = (...args: unknown[]) => Promise<void>;
-
-/**
- * Placeholder event object
- */
-type EventObject = {
-    once?: boolean;
-    execute: EventHandler;
-};
-
-/**
- * Placeholder logger function
- */
-type LoggerFunction = (message: string) => Logger;
-
-/**
- * The accepted interaction types
- */
-type AcceptedInteraction =
-    | AutocompleteInteraction
-    | ButtonInteraction
-    | CommandInteraction
-    | ModalSubmitInteraction
-    | AnySelectMenuInteraction;
+import {
+    InteractionHandler,
+    MessageHandler,
+    type AcceptedInteraction,
+} from './InternalHandlers/index.js';
+import { logger, type LoggerObject } from './Logger.js';
+import { ModuleBaseHandler } from './ModuleHandlers/ModuleBaseHandler.js';
+import {
+    ModuleEventHandler,
+    type ModuleAutocompleteHandler,
+    type ModuleButtonHandler,
+    type ModuleCommandHandler,
+    type ModuleMenuCommandHandler,
+    type ModuleMessageCommandHandler,
+    type ModuleModalSubmitHandler,
+    type ModuleSelectMenuHandler,
+} from './ModuleHandlers/index.js';
 
 const SkeletonLabel = 'Skeleton';
 const mentionPrefix = '@mention ';
 
+export type InteractionHandlersObject = {
+    autocomplete: Collection<string, ModuleAutocompleteHandler>;
+    button: Collection<string, ModuleButtonHandler>;
+    command: Collection<string, ModuleCommandHandler>;
+    menuCommand: Collection<string, ModuleMenuCommandHandler>;
+    modalSubmit: Collection<string, ModuleModalSubmitHandler>;
+    selectMenu: Collection<string, ModuleSelectMenuHandler>;
+};
+
 export class SkeletonClient extends Client {
     private initialized = false;
     // One interaction name can only have one handler
-    protected interactionHandlers = {
-        autocomplete: new Collection<
-            string,
-            (interaction: AutocompleteInteraction) => Promise<void>
-        >(),
-        button: new Collection<
-            string,
-            (interaction: ButtonInteraction) => Promise<void>
-        >(),
-        command: new Collection<
-            string,
-            (interaction: CommandInteraction) => Promise<void>
-        >(),
-        modalSubmit: new Collection<
-            string,
-            (interaction: ModalSubmitInteraction) => Promise<void>
-        >(),
-        selectMenu: new Collection<
-            string,
-            (interaction: AnySelectMenuInteraction) => Promise<void>
-        >(),
+    protected interactionHandlers: InteractionHandlersObject = {
+        autocomplete: new Collection<string, ModuleAutocompleteHandler>(),
+        button: new Collection<string, ModuleButtonHandler>(),
+        command: new Collection<string, ModuleCommandHandler>(),
+        menuCommand: new Collection<string, ModuleMenuCommandHandler>(),
+        modalSubmit: new Collection<string, ModuleModalSubmitHandler>(),
+        selectMenu: new Collection<string, ModuleSelectMenuHandler>(),
     };
     protected messageCommandHandlers = new Collection<
         string,
-        (message: Message) => Promise<void>
+        ModuleMessageCommandHandler
     >();
     /** Command data stored internally for use in deploying commands */
     private commandData: SlashCommandBuilder[] = [];
     // One event can have multiple handlers
-    protected eventHandlers = new Collection<string, EventObject[]>();
+    protected eventHandlers = new Collection<string, ModuleEventHandler[]>();
     private verbose = process.argv
         .slice(2)
         .map((argv): string => argv.toLowerCase())
@@ -90,7 +69,7 @@ export class SkeletonClient extends Client {
         .includes('--deploy');
     private prefix: string[] = [];
     /** Internal logger */
-    private _logger: { [key: string]: LoggerFunction } = {
+    private _logger: LoggerObject = {
         error: (message): Logger =>
             logger.error({ message, label: SkeletonLabel }),
         warn: (message): Logger =>
@@ -102,12 +81,7 @@ export class SkeletonClient extends Client {
                 ? logger.verbose({ message, label: SkeletonLabel })
                 : logger,
     };
-    logger: {
-        error: LoggerFunction;
-        warn: LoggerFunction;
-        info: LoggerFunction;
-        verbose: LoggerFunction;
-    };
+    logger: LoggerObject;
 
     /**
      * Creates an instance of SkeletonClient.
@@ -215,124 +189,23 @@ export class SkeletonClient extends Client {
         };
     }
 
-    /**
-     * Internal interactionCreate event handler
-     * @param interaction - The interaction to handle
-     */
-    private async interactionHandler(
-        interaction: AcceptedInteraction,
-    ): Promise<void> {
-        let execute: (
-            interaction: AcceptedInteraction,
-        ) => Promise<void> | undefined;
-        const source = `from UID ${interaction.user.id}${
-            interaction.inGuild() ? ` in GID ${interaction.guildId}` : ''
-        }`;
-        let details = '',
-            verboseLog = '';
-        if (interaction.isCommand()) {
-            const { commandName, options } = extractCommandDetails(interaction);
-            details = `${interaction.constructor.name} /${commandName}${
-                options?.length > 0
-                    ? ` ${options
-                          .map(
-                              (option): string =>
-                                  `${option.name}:${option.value}`,
-                          )
-                          .join(' ')}`
-                    : ''
-            }`;
-        } else if (!interaction.isAutocomplete()) {
-            details = `${interaction.constructor.name} ${interaction.customId}`;
+    async login(token: string): Promise<string> {
+        const login = await super.login(token);
+        if (this.isReady() && this.prefix.includes(mentionPrefix)) {
+            this._logger.verbose(
+                'Updating placeholder mention prefix with actual mention',
+            );
+            this.prefix[
+                this.prefix.indexOf(mentionPrefix)
+            ] = `<@${this.user.id}> `;
         }
-        if (details) this._logger.info(`Received ${details} ${source}`);
-        if (interaction.isAutocomplete()) {
-            execute = this.interactionHandlers.autocomplete.get(
-                interaction.commandName,
+        if (this.isReady() && this.deploy) {
+            this._logger.verbose(
+                'Triggering command deployment because --deploy flag is set',
             );
-        } else if (interaction.isButton()) {
-            execute = this.interactionHandlers.button.get(
-                interaction.customId.split(':')[0],
-            );
-            verboseLog = `Matched button handler ${
-                interaction.customId.split(':')[0]
-            }`;
-        } else if (interaction.isCommand()) {
-            execute = this.interactionHandlers.command.get(
-                interaction.commandName,
-            );
-            verboseLog = `Matched command handler /${interaction.commandName}`;
-        } else if (interaction.isModalSubmit()) {
-            execute = this.interactionHandlers.modalSubmit.get(
-                interaction.customId.split(':')[0],
-            );
-            verboseLog = `Matched modal submit handler ${
-                interaction.customId.split(':')[0]
-            }`;
-        } else if (interaction.isAnySelectMenu()) {
-            execute = this.interactionHandlers.selectMenu.get(
-                interaction.customId.split(':')[0],
-            );
-            verboseLog = `Matched select menu handler ${
-                interaction.customId.split(':')[0]
-            }`;
+            await this.deployCommands();
         }
-        if (execute) {
-            if (verboseLog) this._logger.verbose(verboseLog);
-            if (details) {
-                this._logger.verbose(`Responding to ${details} ${source}`);
-            }
-            await execute(interaction);
-            return;
-        }
-        if (details) this._logger.warn(`Ignoring ${details} ${source}`);
-    }
-
-    /**
-     * Internal messageCreate event handler
-     * @param message - The message to handle
-     */
-    private async messageHandler(message: Message): Promise<void> {
-        const triggeredPrefix = this.prefix.find((prefix): boolean =>
-            message.content.startsWith(prefix),
-        );
-        if (!triggeredPrefix) return;
-        const source = `from UID ${message.author.id}${
-            message.inGuild() ? ` in GID ${message.guildId}` : ''
-        }`;
-        const details = `MessageCommand ${message.content}`;
-        this._logger.info(`Received ${details} ${source}`);
-        const command = message.content
-            .substring(triggeredPrefix.length)
-            .split(' ')[0];
-        const execute = this.messageCommandHandlers.get(command);
-        if (execute) {
-            this._logger.verbose(`Matched message command handler ${command}`);
-            this._logger.verbose(`Responding to ${details} ${source}`);
-            await execute(message);
-            return;
-        }
-        this._logger.warn(`Ignoring ${details} ${source}`);
-    }
-
-    /**
-     * Internal ready event handler for replacing mention prefix with actual mention
-     */
-    private async readyReplaceMentionPrefixHandler(): Promise<void> {
-        this._logger.verbose(
-            'Updating placeholder mention prefix with actual mention',
-        );
-        this.prefix[this.prefix.indexOf(mentionPrefix)] = `<@${this.user.id}> `;
-    }
-
-    /**
-     * Internal ready event handler for triggering command deployment
-     */
-    private async readyCommandDeployHandler(): Promise<void> {
-        this._logger.info(
-            'Triggering command deployment because --deploy flag is set',
-        );
-        await this.deployCommands();
+        return login;
     }
 
     /**
@@ -343,6 +216,9 @@ export class SkeletonClient extends Client {
      * @param baseURL - The base URL (usually import.meta.url) of the main/index file
      */
     async initialize(baseURL: string): Promise<void> {
+        if (this.initialized) {
+            throw new Error('Client has already been initialized');
+        }
         this._logger.info('Initializing client');
         // Find all modules within the modules directory
         /** Modules (all folders in the 'modules' directory) */
@@ -363,6 +239,7 @@ export class SkeletonClient extends Client {
                     'Autocomplete',
                     'Button',
                     'Command',
+                    'MenuCommand',
                     'ModalSubmit',
                     'SelectMenu',
                     'Event',
@@ -395,10 +272,8 @@ export class SkeletonClient extends Client {
                     );
                     // Import it and add it to the relevant collection
                     const {
-                        execute: handlerExecute,
-                        once: handlerOnce = false,
-                        data: handlerData,
-                    } = await import(
+                        default: handlerData,
+                    }: { default: ModuleBaseHandler } = await import(
                         getAbsoluteFileURL(baseURL, [
                             'modules',
                             module,
@@ -416,19 +291,22 @@ export class SkeletonClient extends Client {
                     /** Handler name without file extension */
                     const handlerName = handler.slice(0, -3);
                     // If it's an event handler, add it to the event handlers collection
-                    if (camelCaseHandlerType === 'event') {
-                        let eventHandlers: EventObject[] = [];
+                    if (
+                        camelCaseHandlerType === 'event' &&
+                        handlerData.isEventHandler()
+                    ) {
+                        let eventHandlers: ModuleEventHandler[] = [];
                         // Event already exists in the collection
                         if (this.eventHandlers.has(handlerName)) {
                             eventHandlers = this.eventHandlers.get(handlerName);
                         }
                         // Add the handler to the collection
-                        eventHandlers.push({
-                            once: handlerOnce,
-                            execute: handlerExecute,
-                        });
+                        eventHandlers.push(handlerData);
                         this.eventHandlers.set(handlerName, eventHandlers);
-                    } else if (camelCaseHandlerType === 'messageCommand') {
+                    } else if (
+                        camelCaseHandlerType === 'messageCommand' &&
+                        handlerData.isMessageCommandHandler()
+                    ) {
                         if (this.messageCommandHandlers.has(handlerName)) {
                             this._logger.warn(
                                 `Error loading ${module} > ${handlerType} > ${handler}: Handler name is conflicting with a previously loaded handler of the same type; skipping`,
@@ -437,13 +315,16 @@ export class SkeletonClient extends Client {
                         }
                         this.messageCommandHandlers.set(
                             handlerName,
-                            handlerExecute,
+                            handlerData,
                         );
-                    } else if (camelCaseHandlerType === 'command') {
+                    } else if (
+                        camelCaseHandlerType === 'command' &&
+                        handlerData.isCommandHandler()
+                    ) {
                         if (
                             this.commandData.some(
                                 (data): boolean =>
-                                    data.name === handlerData.name,
+                                    data.name === handlerData.data.name,
                             )
                         ) {
                             this._logger.warn(
@@ -452,12 +333,14 @@ export class SkeletonClient extends Client {
                             continue;
                         }
                         // Add the command data to the command data array
-                        this.commandData.push(handlerData);
+                        this.commandData.push(handlerData.data);
                     }
-                    // FIXME: Why does TypeScript not support typechecking by Array.prototype.includes?
                     if (
                         camelCaseHandlerType !== 'event' &&
-                        camelCaseHandlerType !== 'messageCommand'
+                        !handlerData.isEventHandler() &&
+                        camelCaseHandlerType !== 'messageCommand' &&
+                        !handlerData.isMessageCommandHandler() &&
+                        !(handlerData instanceof ModuleBaseHandler)
                     ) {
                         if (
                             this.interactionHandlers[camelCaseHandlerType].has(
@@ -471,7 +354,7 @@ export class SkeletonClient extends Client {
                         }
                         this.interactionHandlers[camelCaseHandlerType].set(
                             handlerName,
-                            handlerExecute,
+                            handlerData,
                         );
                     }
                     this._logger.verbose(
@@ -487,18 +370,20 @@ export class SkeletonClient extends Client {
         this._logger.verbose(
             'Adding built-in interactionCreate handler to event handlers',
         );
-        const interactionHandlerObject = {
-            once: false,
-            execute: this.interactionHandler,
-        };
+        const interactionHandler = new ModuleEventHandler().setExecute(
+            (interaction: AcceptedInteraction): Promise<void> =>
+                InteractionHandler({
+                    interaction,
+                    interactionHandlers: this.interactionHandlers,
+                    logger: this._logger,
+                }),
+        );
         if (this.eventHandlers.has('interactionCreate')) {
             this.eventHandlers
                 .get('interactionCreate')
-                .push(interactionHandlerObject);
+                .push(interactionHandler);
         } else {
-            this.eventHandlers.set('interactionCreate', [
-                interactionHandlerObject,
-            ]);
+            this.eventHandlers.set('interactionCreate', [interactionHandler]);
         }
         this._logger.verbose(
             'Added built-in interactionCreate handler to event handlers',
@@ -508,63 +393,22 @@ export class SkeletonClient extends Client {
             this._logger.verbose(
                 'Adding built-in messageCreate handler to event handlers',
             );
-            const messageHandlerObject = {
-                once: false,
-                execute: this.messageHandler,
-            };
+            const messageHandler = new ModuleEventHandler().setExecute(
+                (message: Message): Promise<void> =>
+                    MessageHandler({
+                        message,
+                        prefix: this.prefix,
+                        messageCommandHandlers: this.messageCommandHandlers,
+                        logger: this._logger,
+                    }),
+            );
             if (this.eventHandlers.has('messageCreate')) {
-                this.eventHandlers
-                    .get('messageCreate')
-                    .push(messageHandlerObject);
+                this.eventHandlers.get('messageCreate').push(messageHandler);
             } else {
-                this.eventHandlers.set('messageCreate', [messageHandlerObject]);
+                this.eventHandlers.set('messageCreate', [messageHandler]);
             }
             this._logger.verbose(
                 'Added built-in messageCreate handler to event handlers',
-            );
-        }
-        // Add our ready handler for replacing mention prefix if mention prefix is included in specified prefixes
-        if (this.prefix.includes(mentionPrefix)) {
-            this._logger.verbose(
-                'Adding built-in ready mention prefix replacement handler to event handlers as mention prefix was included',
-            );
-            const readyReplaceMentionPrefixHandlerObject = {
-                once: true,
-                execute: this.readyReplaceMentionPrefixHandler,
-            };
-            if (this.eventHandlers.has('ready')) {
-                this.eventHandlers
-                    .get('ready')
-                    .push(readyReplaceMentionPrefixHandlerObject);
-            } else {
-                this.eventHandlers.set('ready', [
-                    readyReplaceMentionPrefixHandlerObject,
-                ]);
-            }
-            this._logger.verbose(
-                'Added built-in ready mention prefix replacement handler to event handlers',
-            );
-        }
-        // Add our ready handler to the event handlers if deploy flag is set
-        if (this.deploy) {
-            this._logger.verbose(
-                'Adding built-in ready command deployment handler to event handlers as deploy flag is set',
-            );
-            const readyCommandDeployHandlerObject = {
-                once: true,
-                execute: this.readyCommandDeployHandler,
-            };
-            if (this.eventHandlers.has('ready')) {
-                this.eventHandlers
-                    .get('ready')
-                    .push(readyCommandDeployHandlerObject);
-            } else {
-                this.eventHandlers.set('ready', [
-                    readyCommandDeployHandlerObject,
-                ]);
-            }
-            this._logger.verbose(
-                'Added built-in ready command deployment handler to event handlers',
             );
         }
         // Add all the event handlers

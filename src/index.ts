@@ -11,4 +11,5 @@ export const logger = DeprecatedLogger;
  */
 export const ZPTXClient = SkeletonClient;
 
+export * from './ModuleHandlers/index.js';
 export * from './SkeletonClient.js';

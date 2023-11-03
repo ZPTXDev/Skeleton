@@ -1,12 +1,17 @@
-import type { CommandInteraction } from 'discord.js';
-import { ApplicationCommandOptionType } from 'discord.js';
+import {
+    ApplicationCommandOptionType,
+    type ChatInputCommandInteraction,
+    type CommandInteraction,
+} from 'discord.js';
 
 /**
- * Extract command details from a CommandInteraction, including the subcommand group and subcommand in the name and removing them from options if applicable.
+ * Extract command details from a ChatInputCommandInteraction, including the subcommand group and subcommand in the name and removing them from options if applicable.
  * @param interaction - The interaction to extract the command details from.
  * @returns The command details.
  */
-export function extractCommandDetails(interaction: CommandInteraction): {
+export function extractCommandDetails(
+    interaction: ChatInputCommandInteraction,
+): {
     commandName: string;
     options: CommandInteraction['options']['data'];
 } {

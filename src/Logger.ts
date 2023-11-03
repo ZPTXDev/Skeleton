@@ -1,5 +1,23 @@
-import type { Logform } from 'winston';
-import { addColors, createLogger, format, transports } from 'winston';
+import {
+    addColors,
+    createLogger,
+    format,
+    transports,
+    type Logform,
+    type Logger,
+} from 'winston';
+
+/**
+ * Placeholder logger function
+ */
+export type LoggerFunction = (message: string) => Logger;
+
+export type LoggerObject = {
+    error: LoggerFunction;
+    warn: LoggerFunction;
+    info: LoggerFunction;
+    verbose: LoggerFunction;
+};
 
 addColors({
     verbose: 'blackBG dim bold',
@@ -12,6 +30,7 @@ addColors({
     errorMsg: 'red',
     meaningless: 'gray',
 });
+
 export const logger = createLogger({
     level: 'verbose',
     format: format.combine(
