@@ -1,6 +1,6 @@
 import type { Collection, Message } from 'discord.js';
-import type { LoggerObject } from 'src/Logger.js';
-import type { ModuleMessageCommandHandler } from 'src/ModuleHandlers/index.js';
+import type { LoggerObject } from '../Logger.js';
+import type { ModuleMessageCommandHandler } from '../ModuleHandlers/index.js';
 
 type MessageHandlerOptions = {
     /** The message to handle */
