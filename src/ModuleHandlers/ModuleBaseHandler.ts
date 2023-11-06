@@ -1,4 +1,4 @@
-import {
+import type {
     ModuleAutocompleteHandler,
     ModuleButtonHandler,
     ModuleCommandHandler,
@@ -15,6 +15,7 @@ export type GenericExecuteFunction = (
 
 export abstract class ModuleBaseHandler {
     abstract execute: GenericExecuteFunction;
+    private type: string = this.constructor.name;
 
     abstract setExecute(execute: GenericExecuteFunction): this;
 
@@ -23,34 +24,34 @@ export abstract class ModuleBaseHandler {
     }
 
     isEventHandler(): this is ModuleEventHandler {
-        return this instanceof ModuleEventHandler;
+        return this.type === 'ModuleEventHandler';
     }
 
     isAutocompleteHandler(): this is ModuleAutocompleteHandler {
-        return this instanceof ModuleAutocompleteHandler;
+        return this.type === 'ModuleAutocompleteHandler';
     }
 
     isButtonHandler(): this is ModuleButtonHandler {
-        return this instanceof ModuleButtonHandler;
+        return this.type === 'ModuleButtonHandler';
     }
 
     isCommandHandler(): this is ModuleCommandHandler {
-        return this instanceof ModuleCommandHandler;
+        return this.type === 'ModuleCommandHandler';
     }
 
     isMenuCommandHandler(): this is ModuleMenuCommandHandler {
-        return this instanceof ModuleMenuCommandHandler;
+        return this.type === 'ModuleMenuCommandHandler';
     }
 
     isModalSubmitHandler(): this is ModuleModalSubmitHandler {
-        return this instanceof ModuleModalSubmitHandler;
+        return this.type === 'ModuleModalSubmitHandler';
     }
 
     isSelectMenuHandler(): this is ModuleSelectMenuHandler {
-        return this instanceof ModuleSelectMenuHandler;
+        return this.type === 'ModuleSelectMenuHandler';
     }
 
     isMessageCommandHandler(): this is ModuleMessageCommandHandler {
-        return this instanceof ModuleMessageCommandHandler;
+        return this.type === 'ModuleMessageCommandHandler';
     }
 }
