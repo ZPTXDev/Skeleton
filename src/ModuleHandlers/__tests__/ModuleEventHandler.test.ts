@@ -24,6 +24,17 @@ describe('ModuleEventHandler class', (): void => {
         expect(new ModuleEventHandler().isSelectMenuHandler()).toBe(false);
         expect(new ModuleEventHandler().isMessageCommandHandler()).toBe(false);
     });
+    describe('setOnce method', (): void => {
+        test('is a function', (): void => {
+            expect(typeof ModuleEventHandler.prototype.setOnce).toEqual(
+                'function',
+            );
+        });
+        test('returns itself (for chaining)', (): void => {
+            const instance = new ModuleEventHandler();
+            expect(instance.setOnce(true)).toEqual(instance);
+        });
+    });
     describe('setExecute method', (): void => {
         test('is a function', (): void => {
             expect(typeof ModuleEventHandler.prototype.setExecute).toEqual(
