@@ -12,6 +12,11 @@ export class ModuleCommandHandler extends ModuleBaseHandler {
     data: SlashCommandBuilder;
     execute: GenericCommandExecuteFunction;
 
+    /**
+     * Sets the SlashCommandBuilder data for this handler.
+     * @param data - The SlashCommandBuilder data.
+     * @returns This instance for chaining.
+     */
     setData(data: SlashCommandBuilder): this {
         this.data = data;
         return this;
@@ -22,6 +27,10 @@ export class ModuleCommandHandler extends ModuleBaseHandler {
         return this;
     }
 
+    /**
+     * Validates the handler, ensuring the SlashCommandBuilder data and execute function are set.
+     * @returns Whether the handler is valid.
+     */
     validate(): boolean {
         return (
             this.data instanceof SlashCommandBuilder &&
