@@ -281,6 +281,12 @@ export class SkeletonClient extends Client {
                             handler,
                         ]).toString()
                     );
+                    if (!handlerData?.validate()) {
+                        this._logger.warn(
+                            `Error loading ${module} > ${handlerType} > ${handler}: Handler is invalid; skipping`,
+                        );
+                        continue;
+                    }
                     /** Handler type in camel case */
                     const camelCaseHandlerType = (handlerType
                         .charAt(0)
@@ -415,6 +421,12 @@ export class SkeletonClient extends Client {
         this._logger.verbose('Setting up event handlers');
         this.eventHandlers.forEach((eventHandler, key): void => {
             eventHandler.forEach((handler): void => {
+                if (!handler.validate()) {
+                    this._logger.warn(
+                        `Error setting up event handler ${key}: Handler is invalid; skipping`,
+                    );
+                    return;
+                }
                 if (handler.once) {
                     this.once(key, handler.execute);
                     return;
