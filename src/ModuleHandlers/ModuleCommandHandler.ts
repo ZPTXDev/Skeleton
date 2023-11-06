@@ -1,6 +1,6 @@
-import {
+import type {
+    ChatInputCommandInteraction,
     SlashCommandBuilder,
-    type ChatInputCommandInteraction,
 } from 'discord.js';
 import { ModuleBaseHandler } from './ModuleBaseHandler.js';
 
@@ -33,7 +33,7 @@ export class ModuleCommandHandler extends ModuleBaseHandler {
      */
     validate(): boolean {
         return (
-            this.data instanceof SlashCommandBuilder &&
+            this.data?.constructor.name === 'SlashCommandBuilder' &&
             typeof this.execute === 'function'
         );
     }
