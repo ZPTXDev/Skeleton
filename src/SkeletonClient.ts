@@ -199,7 +199,7 @@ export class SkeletonClient extends Client {
                 this.prefix.indexOf(mentionPrefix)
             ] = `<@${this.user.id}> `;
         }
-        if (this.isReady() && this.deploy) {
+        if (this.isReady() && this.initialized && this.deploy) {
             this._logger.verbose(
                 'Triggering command deployment because --deploy flag is set',
             );
