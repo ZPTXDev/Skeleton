@@ -15,7 +15,7 @@ export type GenericExecuteFunction = (
 
 export abstract class ModuleBaseHandler {
     abstract execute: GenericExecuteFunction;
-    private type: string = this.constructor.name;
+    readonly type: string = this.constructor.name;
 
     /**
      * Sets the execute function for this handler.
@@ -30,6 +30,14 @@ export abstract class ModuleBaseHandler {
      */
     validate(): boolean {
         return typeof this.execute === 'function';
+    }
+
+    /**
+     * Checks if this handler is an unconfigured handler.
+     * @returns Whether this handler is an unconfigured handler.
+     */
+    isUnconfiguredHandler(): this is ModuleBaseHandler {
+        return this.type === 'ModuleBaseHandler';
     }
 
     /**

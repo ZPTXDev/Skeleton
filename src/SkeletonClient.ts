@@ -16,7 +16,7 @@ import {
     type AcceptedInteraction,
 } from './InternalHandlers/index.js';
 import { logger, type LoggerObject } from './Logger.js';
-import { ModuleBaseHandler } from './ModuleHandlers/ModuleBaseHandler.js';
+import type { ModuleBaseHandler } from './ModuleHandlers/ModuleBaseHandler.js';
 import {
     ModuleEventHandler,
     type ModuleAutocompleteHandler,
@@ -350,7 +350,7 @@ export class SkeletonClient extends Client {
                         !handlerData.isEventHandler() &&
                         camelCaseHandlerType !== 'messageCommand' &&
                         !handlerData.isMessageCommandHandler() &&
-                        !(handlerData instanceof ModuleBaseHandler)
+                        !handlerData.isUnconfiguredHandler()
                     ) {
                         if (
                             this.interactionHandlers[camelCaseHandlerType].has(
