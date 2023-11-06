@@ -6,9 +6,9 @@ import type {
     ContextMenuCommandInteraction,
     ModalSubmitInteraction,
 } from 'discord.js';
-import type { LoggerObject } from 'src/Logger.js';
-import type { InteractionHandlersObject } from 'src/SkeletonClient.js';
-import { extractCommandDetails } from 'src/utils.js';
+import type { LoggerObject } from '../Logger.js';
+import type { InteractionHandlersObject } from '../SkeletonClient.js';
+import { extractCommandDetails } from '../utils.js';
 
 /**
  * The accepted interaction types
