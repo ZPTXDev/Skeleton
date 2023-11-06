@@ -191,19 +191,23 @@ export class SkeletonClient extends Client {
 
     async login(token: string): Promise<string> {
         const login = await super.login(token);
-        if (this.isReady() && this.prefix.includes(mentionPrefix)) {
-            this._logger.verbose(
-                'Updating placeholder mention prefix with actual mention',
-            );
-            this.prefix[
-                this.prefix.indexOf(mentionPrefix)
-            ] = `<@${this.user.id}> `;
+        if (this.prefix.includes(mentionPrefix)) {
+            this.once('ready', (): void => {
+                this._logger.verbose(
+                    'Updating placeholder mention prefix with actual mention',
+                );
+                this.prefix[
+                    this.prefix.indexOf(mentionPrefix)
+                ] = `<@${this.user.id}> `;
+            });
         }
-        if (this.isReady() && this.initialized && this.deploy) {
-            this._logger.verbose(
-                'Triggering command deployment because --deploy flag is set',
-            );
-            await this.deployCommands();
+        if (this.initialized && this.deploy) {
+            this.once('ready', async (): Promise<void> => {
+                this._logger.verbose(
+                    'Triggering command deployment because --deploy flag is set',
+                );
+                await this.deployCommands();
+            });
         }
         return login;
     }
