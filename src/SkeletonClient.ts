@@ -347,8 +347,8 @@ export class SkeletonClient extends Client {
                     }
                     if (
                         camelCaseHandlerType !== 'event' &&
-                        !handlerData.isEventHandler() &&
                         camelCaseHandlerType !== 'messageCommand' &&
+                        !handlerData.isEventHandler() &&
                         !handlerData.isMessageCommandHandler() &&
                         !handlerData.isUnconfiguredHandler()
                     ) {
