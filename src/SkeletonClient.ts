@@ -4,7 +4,6 @@ import {
     Collection,
     GatewayIntentBits,
     type ClientOptions,
-    type Message,
     type RESTPostAPIChatInputApplicationCommandsJSONBody,
     type SlashCommandBuilder,
 } from 'discord.js';
@@ -13,7 +12,6 @@ import type { Logger } from 'winston';
 import {
     InteractionHandler,
     MessageHandler,
-    type AcceptedInteraction,
 } from './InternalHandlers/index.js';
 import { logger, type LoggerObject } from './Logger.js';
 import type { ModuleBaseHandler } from './ModuleHandlers/ModuleBaseHandler.js';
@@ -385,14 +383,16 @@ export class SkeletonClient extends Client {
         this._logger.verbose(
             'Adding built-in interactionCreate handler to event handlers',
         );
-        const interactionHandler = new ModuleEventHandler().setExecute(
-            (interaction: AcceptedInteraction): Promise<void> =>
-                InteractionHandler({
-                    interaction,
-                    interactionHandlers: this.interactionHandlers,
-                    logger: this._logger,
-                }),
-        );
+        const interactionHandler = new ModuleEventHandler()
+            .setEvent('interactionCreate')
+            .setExecute(
+                (interaction): Promise<void> =>
+                    InteractionHandler({
+                        interaction,
+                        interactionHandlers: this.interactionHandlers,
+                        logger: this._logger,
+                    }),
+            );
         if (this.eventHandlers.has('interactionCreate')) {
             this.eventHandlers
                 .get('interactionCreate')
@@ -408,15 +408,17 @@ export class SkeletonClient extends Client {
             this._logger.verbose(
                 'Adding built-in messageCreate handler to event handlers',
             );
-            const messageHandler = new ModuleEventHandler().setExecute(
-                (message: Message): Promise<void> =>
-                    MessageHandler({
-                        message,
-                        prefix: this.prefix,
-                        messageCommandHandlers: this.messageCommandHandlers,
-                        logger: this._logger,
-                    }),
-            );
+            const messageHandler = new ModuleEventHandler()
+                .setEvent('messageCreate')
+                .setExecute(
+                    (message): Promise<void> =>
+                        MessageHandler({
+                            message,
+                            prefix: this.prefix,
+                            messageCommandHandlers: this.messageCommandHandlers,
+                            logger: this._logger,
+                        }),
+                );
             if (this.eventHandlers.has('messageCreate')) {
                 this.eventHandlers.get('messageCreate').push(messageHandler);
             } else {
