@@ -18,6 +18,9 @@ describe('ModuleModalSubmitHandler class', (): void => {
         );
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleModalSubmitHandler().isUnconfiguredHandler()).toBe(
+            false,
+        );
         expect(new ModuleModalSubmitHandler().isEventHandler()).toBe(false);
         expect(new ModuleModalSubmitHandler().isAutocompleteHandler()).toBe(
             false,

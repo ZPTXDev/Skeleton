@@ -35,6 +35,35 @@ describe('ModuleEventHandler class', (): void => {
             expect(instance.setOnce(true)).toEqual(instance);
         });
     });
+    describe('setEvent method', (): void => {
+        test('is a function', (): void => {
+            expect(typeof ModuleEventHandler.prototype.setEvent).toEqual(
+                'function',
+            );
+        });
+        test('returns a new instance of ModuleEventHandler', (): void => {
+            const instance = new ModuleEventHandler();
+            expect(instance.setEvent('messageCreate')).toBeInstanceOf(
+                ModuleEventHandler,
+            );
+        });
+        test('returns a new instance of ModuleEventHandler with the same execute function', (): void => {
+            const instance = new ModuleEventHandler();
+            instance.setExecute((eventArgs): void => {
+                eventArgs;
+            });
+            expect(instance.setEvent('messageCreate').execute).toEqual(
+                instance.execute,
+            );
+        });
+        test('returns a new instance of ModuleEventHandler with the same once value', (): void => {
+            const instance = new ModuleEventHandler();
+            instance.setOnce(true);
+            expect(instance.setEvent('messageCreate').once).toEqual(
+                instance.once,
+            );
+        });
+    });
     describe('setExecute method', (): void => {
         test('is a function', (): void => {
             expect(typeof ModuleEventHandler.prototype.setExecute).toEqual(

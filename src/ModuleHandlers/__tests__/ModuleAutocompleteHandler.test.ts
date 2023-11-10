@@ -18,6 +18,9 @@ describe('ModuleAutocompleteHandler class', (): void => {
         );
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleAutocompleteHandler().isUnconfiguredHandler()).toBe(
+            false,
+        );
         expect(new ModuleAutocompleteHandler().isEventHandler()).toBe(false);
         expect(new ModuleAutocompleteHandler().isButtonHandler()).toBe(false);
         expect(new ModuleAutocompleteHandler().isCommandHandler()).toBe(false);

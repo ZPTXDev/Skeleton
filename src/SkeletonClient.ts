@@ -19,6 +19,7 @@ import { logger, type LoggerObject } from './Logger.js';
 import type { ModuleBaseHandler } from './ModuleHandlers/ModuleBaseHandler.js';
 import {
     ModuleEventHandler,
+    type AcceptedEventTypes,
     type ModuleAutocompleteHandler,
     type ModuleButtonHandler,
     type ModuleCommandHandler,
@@ -58,7 +59,10 @@ export class SkeletonClient extends Client {
     /** Command data stored internally for use in deploying commands */
     private commandData: SlashCommandBuilder[] = [];
     // One event can have multiple handlers
-    protected eventHandlers = new Collection<string, ModuleEventHandler[]>();
+    protected eventHandlers = new Collection<
+        string,
+        ModuleEventHandler<AcceptedEventTypes>[]
+    >();
     private verbose = process.argv
         .slice(2)
         .map((argv): string => argv.toLowerCase())
@@ -305,7 +309,8 @@ export class SkeletonClient extends Client {
                         camelCaseHandlerType === 'event' &&
                         handlerData.isEventHandler()
                     ) {
-                        let eventHandlers: ModuleEventHandler[] = [];
+                        let eventHandlers: ModuleEventHandler<AcceptedEventTypes>[] =
+                            [];
                         // Event already exists in the collection
                         if (this.eventHandlers.has(handlerName)) {
                             eventHandlers = this.eventHandlers.get(handlerName);

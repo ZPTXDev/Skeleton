@@ -16,6 +16,9 @@ describe('ModuleSelectMenuHandler class', (): void => {
         expect(new ModuleSelectMenuHandler().isSelectMenuHandler()).toBe(true);
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleSelectMenuHandler().isUnconfiguredHandler()).toBe(
+            false,
+        );
         expect(new ModuleSelectMenuHandler().isEventHandler()).toBe(false);
         expect(new ModuleSelectMenuHandler().isAutocompleteHandler()).toBe(
             false,

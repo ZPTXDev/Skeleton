@@ -19,6 +19,9 @@ describe('ModuleMenuCommandHandler class', (): void => {
         );
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleMenuCommandHandler().isUnconfiguredHandler()).toBe(
+            false,
+        );
         expect(new ModuleMenuCommandHandler().isEventHandler()).toBe(false);
         expect(new ModuleMenuCommandHandler().isAutocompleteHandler()).toBe(
             false,

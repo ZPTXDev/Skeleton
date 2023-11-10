@@ -16,6 +16,7 @@ describe('ModuleButtonHandler class', (): void => {
         expect(new ModuleButtonHandler().isButtonHandler()).toBe(true);
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleButtonHandler().isUnconfiguredHandler()).toBe(false);
         expect(new ModuleButtonHandler().isEventHandler()).toBe(false);
         expect(new ModuleButtonHandler().isAutocompleteHandler()).toBe(false);
         expect(new ModuleButtonHandler().isCommandHandler()).toBe(false);

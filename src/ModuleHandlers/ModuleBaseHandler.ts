@@ -1,4 +1,5 @@
 import type {
+    AcceptedEventTypes,
     ModuleAutocompleteHandler,
     ModuleButtonHandler,
     ModuleCommandHandler,
@@ -44,7 +45,7 @@ export abstract class ModuleBaseHandler {
      * Checks if this handler is an event handler.
      * @returns Whether this handler is an event handler.
      */
-    isEventHandler(): this is ModuleEventHandler {
+    isEventHandler(): this is ModuleEventHandler<AcceptedEventTypes> {
         return this.type === 'ModuleEventHandler';
     }
 

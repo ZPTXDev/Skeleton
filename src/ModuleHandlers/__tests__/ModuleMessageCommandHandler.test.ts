@@ -18,6 +18,9 @@ describe('ModuleMessageCommandHandler class', (): void => {
         ).toBe(true);
     });
     test('all other typecheck methods return false', (): void => {
+        expect(new ModuleMessageCommandHandler().isUnconfiguredHandler()).toBe(
+            false,
+        );
         expect(new ModuleMessageCommandHandler().isEventHandler()).toBe(false);
         expect(new ModuleMessageCommandHandler().isAutocompleteHandler()).toBe(
             false,
