@@ -204,9 +204,8 @@ export class SkeletonClient extends Client {
                 this._logger.verbose(
                     'Updating placeholder mention prefix with actual mention',
                 );
-                this.prefix[
-                    this.prefix.indexOf(mentionPrefix)
-                ] = `<@${this.user.id}> `;
+                this.prefix[this.prefix.indexOf(mentionPrefix)] =
+                    `<@${this.user.id}> `;
             });
         }
         if (this.initialized && this.deploy) {
