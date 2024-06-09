@@ -1,4 +1,8 @@
 import { getAbsoluteFileURL } from '@zptxdev/zptx-lib';
+import type {
+    ContextMenuCommandBuilder,
+    RESTPostAPIContextMenuApplicationCommandsJSONBody,
+} from 'discord.js';
 import {
     Client,
     Collection,
@@ -56,6 +60,8 @@ export class SkeletonClient extends Client {
     >();
     /** Command data stored internally for use in deploying commands */
     private commandData: SlashCommandBuilder[] = [];
+    /** Menu command data stored internally for use in deploying commands */
+    private menuCommandData: ContextMenuCommandBuilder[] = [];
     // One event can have multiple handlers
     protected eventHandlers = new Collection<
         string,
@@ -465,12 +471,16 @@ export class SkeletonClient extends Client {
             );
         }
         this._logger.info('Deploying commands');
-        await this.application.commands.set(
-            this.commandData.map(
+        await this.application.commands.set([
+            ...this.commandData.map(
                 (data): RESTPostAPIChatInputApplicationCommandsJSONBody =>
                     data.toJSON(),
             ),
-        );
+            ...this.menuCommandData.map(
+                (data): RESTPostAPIContextMenuApplicationCommandsJSONBody =>
+                    data.toJSON(),
+            ),
+        ]);
         this._logger.info('Deployed commands');
     }
 
