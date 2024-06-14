@@ -64,8 +64,10 @@ jobs:
         run: pnpm install
       - name: Build
         run: pnpm run build
-      - run: npx typedoc src/index.ts --name "${{ github.event.repository.name }} (${{ github.ref_name }})"
-      - uses: JamesIves/github-pages-deploy-action@v4
+      - name: Generate docs
+        run: npx typedoc src/index.ts --name "${{ github.event.repository.name }} (${{ github.ref_name }})"
+      - name: Commit updated docs and deploy pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
           folder: docs
