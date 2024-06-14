@@ -149,8 +149,7 @@ export class SkeletonClient extends Client {
             | { appName?: string; prefix?: string | string[] },
     ) {
         super(options);
-        let appName: string = undefined;
-        appName =
+        const appName =
             typeof appNameOrOptions === 'string'
                 ? appNameOrOptions
                 : appNameOrOptions?.appName;
