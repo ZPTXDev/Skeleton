@@ -18,8 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup git user
-        uses: fregante/setup-git-user@v2
+          token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
       - name: Merge changes from 'master' into 'next'
         run: |
           git checkout master
