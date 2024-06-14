@@ -27,6 +27,9 @@ importers:
         specifier: ^3.13.0
         version: 3.13.0
     devDependencies:
+      '@jest/types':
+        specifier: ^29.6.3
+        version: 29.6.3
       '@swc/core':
         specifier: ^1.5.29
         version: 1.5.29
