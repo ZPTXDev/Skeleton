@@ -352,6 +352,23 @@ export class SkeletonClient extends Client {
                         }
                         // Add the command data to the command data array
                         this.commandData.push(handlerData.data);
+                    } else if (
+                        camelCaseHandlerType === 'menuCommand' &&
+                        handlerData.isMenuCommandHandler()
+                    ) {
+                        if (
+                            this.menuCommandData.some(
+                                (data): boolean =>
+                                    data.name === handlerData.data.name,
+                            )
+                        ) {
+                            this._logger.warn(
+                                `Error loading ${module} > ${handlerType} > ${handler}: Context menu command data is conflicting with a previously loaded context menu command; skipping`,
+                            );
+                            continue;
+                        }
+                        // Add the command data to the command data array
+                        this.menuCommandData.push(handlerData.data);
                     }
                     if (
                         camelCaseHandlerType !== 'event' &&
