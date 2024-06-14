@@ -1,4 +1,4 @@
-name: Update dev branch
+name: Update next branch
 on:
   workflow_run:
     workflows: [Release]
@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  update-dev:
-    name: Sync dev with master
+  update-next:
+    name: Sync next with master
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -20,11 +20,11 @@ jobs:
           fetch-depth: 0
       - name: Setup git user
         uses: fregante/setup-git-user@v2
-      - name: Merge changes from 'master' into 'dev'
+      - name: Merge changes from 'master' into 'next'
         run: |
           git checkout master
           git fetch origin
-          git checkout dev
+          git checkout next
           git pull
           git merge origin/master
-          git push origin dev
+          git push origin next
