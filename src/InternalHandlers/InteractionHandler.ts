@@ -53,7 +53,7 @@ export async function InteractionHandler({
                 : ''
         }`;
     } else if (interaction.isContextMenuCommand()) {
-        details = `${interaction.constructor.name} /${interaction.commandName}`;
+        details = `${interaction.constructor.name} ${interaction.commandName}`;
     } else if (!interaction.isAutocomplete()) {
         details = `${interaction.constructor.name} ${interaction.customId}`;
     }
