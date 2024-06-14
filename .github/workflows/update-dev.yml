@@ -1,0 +1,26 @@
+name: Update dev branch
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup git user
+        uses: fregante/setup-git-user@v2
+      - name: Merge changes from 'master' into 'dev'
+        run: |
+          git checkout master
+          git fetch origin
+          git checkout dev
+          git pull
+          git merge origin/master
+          git push origin dev
