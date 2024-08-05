@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@jest/types": "^30.0.0-alpha.5",
-    "@swc/core": "^1.7.5",
+    "@swc/core": "^1.7.6",
     "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.12",
     "@types/lodash-es": "^4.17.12",
