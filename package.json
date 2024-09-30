@@ -62,7 +62,7 @@
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.14.12",
     "@typescript-eslint/eslint-plugin": "^8.8.0",
-    "@typescript-eslint/parser": "^8.7.0",
+    "@typescript-eslint/parser": "^8.8.0",
     "eslint": "^9.11.1",
     "globals": "^15.9.0",
     "jest": "^30.0.0-alpha.5",
