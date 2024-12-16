@@ -63,7 +63,7 @@
     "@types/node": "^20.14.12",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.1",
-    "eslint": "^9.16.0",
+    "eslint": "^9.17.0",
     "globals": "^15.13.0",
     "jest": "^30.0.0-alpha.5",
     "prettier": "^3.4.2",
