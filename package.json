@@ -69,7 +69,7 @@
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "typedoc": "^0.28.13",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@zptxdev/zptx-lib": "^1.1.0",
