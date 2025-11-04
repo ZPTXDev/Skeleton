@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^9.39.1",
     "@jest/types": "^30.2.0",
     "@swc/core": "^1.14.0",
     "@swc/jest": "^0.2.39",
