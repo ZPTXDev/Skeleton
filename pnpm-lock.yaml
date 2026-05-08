@@ -28,8 +28,8 @@ importers:
         specifier: ^9.39.4
         version: 9.39.4
       '@jest/types':
-        specifier: ^30.4.0
-        version: 30.4.0
+        specifier: ^30.4.1
+        version: 30.4.1
       '@swc/core':
         specifier: ^1.15.33
         version: 1.15.33
@@ -509,8 +509,8 @@ packages:
     resolution: {integrity: sha512-+g/1TKjFuGrf1Hh0QPCv0gISwBxJ+MQSNXmG9zjHy7BmFhtoJ9fdNhWJp3qUKRi93AOZHXtdxZgJ1vAtz6z65w==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jest/schemas@30.4.0':
-    resolution: {integrity: sha512-tJLUhzktAsL7VKYJzdkNKxYTKGnkQvd6bMZQtxWnaE4V1VJyzzwt5WrCG5hwC+mB55uZbNSsxQUXLKjla08XPg==}
+  '@jest/schemas@30.4.1':
+    resolution: {integrity: sha512-i6b4qw5qnP8c5FEeBJg/uZQ4ddrkN6Ca8qISJh0pr7a5hfn3h3v5x60BEbOC7OYAGZNMs1LfFLwnW2CuK8F57Q==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jest/snapshot-utils@30.0.0-alpha.5':
@@ -545,8 +545,8 @@ packages:
     resolution: {integrity: sha512-HGwoYRVF0QSKJu1ZQX0o5ZrUrrhj0aOOFA8hXrumD7SIzjouevhawbTjmXdwOmURdGluU9DM/XvGm3NyFoiQjw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jest/types@30.4.0':
-    resolution: {integrity: sha512-C951KSoEicxFUsUIO4T8lqWEemuMgMb3vlI8FO4OP369GSf6SOJd681nOcv7XR0TV5vCO4Jypvq3rBGEqfy9KQ==}
+  '@jest/types@30.4.1':
+    resolution: {integrity: sha512-f1x/vJXIfjOlEmejYpbkbgw1gOqpPECwMvMEtBqe47j7H2Hg8h8w3o3ikhSXq3MI15kg+oQ0exWO0uCtTNJLoQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -2874,7 +2874,7 @@ snapshots:
     dependencies:
       '@sinclair/typebox': 0.34.49
 
-  '@jest/schemas@30.4.0':
+  '@jest/schemas@30.4.1':
     dependencies:
       '@sinclair/typebox': 0.34.49
 
@@ -2954,10 +2954,10 @@ snapshots:
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
-  '@jest/types@30.4.0':
+  '@jest/types@30.4.1':
     dependencies:
       '@jest/pattern': 30.4.0
-      '@jest/schemas': 30.4.0
+      '@jest/schemas': 30.4.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
       '@types/node': 20.14.12
