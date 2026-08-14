@@ -55,8 +55,8 @@ importers:
         specifier: ^9.39.2
         version: 9.39.2
       globals:
-        specifier: ^15.15.0
-        version: 15.15.0
+        specifier: ^17.9.0
+        version: 17.9.0
       jest:
         specifier: ^30.0.0-alpha.5
         version: 30.0.0-alpha.5(@types/node@20.14.12)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@20.14.12)(typescript@5.9.3))
@@ -1377,8 +1377,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@15.15.0:
-    resolution: {integrity: sha512-7ACyT3wmyp3I61S4fG682L0VA2RGD9otkqGJIwNUMF1SWUombIIk+af1unuDYgMm082aHYwD+mzJvv9Iu8dsgg==}
+  globals@17.9.0:
+    resolution: {integrity: sha512-m/MvAW61QVU5VDNF1Vj8axt016h8w7L5TU1e9zlab7XIttAT2YAlCwl75K1fOqvMM9apmD7lbCIRhpfkhmxhCg==}
     engines: {node: '>=18'}
 
   graceful-fs@4.2.11:
@@ -3831,7 +3831,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@15.15.0: {}
+  globals@17.9.0: {}
 
   graceful-fs@4.2.11: {}
 
